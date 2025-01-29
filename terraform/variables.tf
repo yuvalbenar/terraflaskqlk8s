@@ -1,5 +1,5 @@
-provider "google" {
-  credentials = jsondecode(var.gcp_credentials)
-  project     = "terraflaskqlk8s"
-  region      = "us-central1"
+variable "gcp_credentials" {
+  description = "The GCP credentials in JSON format"
+  type        = string
+  sensitive   = true
 }
