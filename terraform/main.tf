@@ -1,8 +1,9 @@
 provider "google" {
   project     = "terraflaskqlk8s"
-  region      = "us-east1"
-  credentials = var.gcp_credentials
+  region      = "us-east1-b"
+  credentials = null  # Let Terraform use the environment variable
 }
+
 
 resource "google_container_cluster" "flasksql_cluster" {
   name               = "flasksql-cluster"
