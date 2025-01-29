@@ -35,10 +35,10 @@ jobs:
 
       # Step 5: Terraform Plan
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -var="gcp_credentials=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
         working-directory: terraform  # <-- Specify the directory
 
       # Step 6: Terraform Apply
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="gcp_credentials=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
         working-directory: terraform  # <-- Specify the directory
