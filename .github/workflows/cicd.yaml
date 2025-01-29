@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main 
-  
+  workflow_dispatch:
 
 jobs:
   terraform:
@@ -36,12 +36,8 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -var="gcp_credentials=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform  # <-- Specify the directory
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/terraflaskqlk8s/terraflaskqlk8s/gha-creds-94aff89eb592c300.json
 
       # Step 6: Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="gcp_credentials=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform  # <-- Specify the directory
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/work/terraflaskqlk8s/terraflaskqlk8s/gha-creds-94aff89eb592c300.json
