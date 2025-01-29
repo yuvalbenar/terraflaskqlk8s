@@ -1,5 +1,5 @@
 variable "gcp_credentials" {
-  description = "GCP service account key in JSON format"
+  description = "The GCP credentials in JSON format"
   type        = string
   sensitive   = true
 }
