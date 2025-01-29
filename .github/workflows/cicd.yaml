@@ -19,7 +19,7 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
           export_default_credentials: true
 
       # Step 3: Install Terraform
@@ -35,10 +35,10 @@ jobs:
 
       # Step 5: Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -var="gcp_credentials=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+        run: terraform plan -var="gcp_credentials=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform  # <-- Specify the directory
 
       # Step 6: Terraform Apply
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="gcp_credentials=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}"
+        run: terraform apply -auto-approve -var="gcp_credentials=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform  # <-- Specify the directory
