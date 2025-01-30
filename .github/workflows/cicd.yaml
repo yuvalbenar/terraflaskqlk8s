@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - main 
-
-
-jobs:
+  jobs:
   terraform:
     runs-on: ubuntu-latest
 
