@@ -1,4 +1,4 @@
-nname: Terraform GKE Cluster Setup
+name: Terraform GKE Cluster Setup
 
 on:
   push:
