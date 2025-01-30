@@ -1,5 +1,4 @@
-variable "gcp_credentials" {
-  description = "The GCP credentials in JSON format"
+variable "GCP_CREDENTIALS" {
+  description = "GCP service account credentials JSON"
   type        = string
-  sensitive   = true
 }
