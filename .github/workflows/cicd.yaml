@@ -12,14 +12,14 @@ jobs:
 
     env:
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Set the GCP credentials from GitHub Secrets
-      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # If you need this as well
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Use the environment variable for Terraform
 
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Google Cloud Authentication
+      # Step 2: Set up Google Cloud Authentication (simplified approach)
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:

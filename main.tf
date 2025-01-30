@@ -1,8 +1,9 @@
 provider "google" {
   project     = "terraflaskqlk8s"  # Replace with your GCP project ID
   region      = "us-east1"          # Use the region (not zone, e.g., "us-east1")
-  credentials = file(env.GCP_CREDENTIALS)  # Directly use the environment variable
+  credentials = null  # Let the provider automatically use the environment variable
 }
+
 
 resource "google_container_cluster" "flasksql_cluster" {
   name               = "flasksql-cluster"
