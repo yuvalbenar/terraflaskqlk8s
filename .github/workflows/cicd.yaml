@@ -10,42 +10,33 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    env:
+      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Set the GCP credentials from GitHub Secrets
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Write GCP Credentials to File
-      - name: Write GCP Credentials to File
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > /tmp/gcp_credentials.json
-
-      # Step 3: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
-      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
-        run: echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp_credentials.json" >> $GITHUB_ENV
-
-      # Step 4: Set up Google Cloud Authentication (credentials from the environment variable)
+      # Step 2: Set up Google Cloud Authentication (simplified approach)
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: /tmp/gcp_credentials.json
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # Step 5: Install Terraform
+      # Step 3: Install Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
 
-      # Step 6: Initialize Terraform
+      # Step 4: Initialize Terraform
       - name: Terraform Init
         run: terraform init
         working-directory: terraform
 
-      # Step 7: Terraform Plan
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: terraform
-
-      # Step 8: Terraform Apply
+      
+      # Step 6: Terraform Apply
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform
