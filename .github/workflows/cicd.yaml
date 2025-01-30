@@ -12,6 +12,7 @@ jobs:
 
     env:
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Set the GCP credentials from GitHub Secrets
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
     steps:
       # Step 1: Checkout the repository
@@ -33,10 +34,7 @@ jobs:
       # Step 4: Initialize Terraform
       - name: Terraform Init
         run: terraform init
-        
 
-      
-      # Step 6: Terraform Apply
+      # Step 5: Terraform Apply
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
-        
+        run: terraform apply -auto-approve
