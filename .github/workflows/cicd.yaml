@@ -15,11 +15,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Google Cloud Authentication
+      # Step 2: Set up Google Cloud Authentication using the Google Auth action
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # Set GCP credentials from GitHub Secrets
 
       # Step 3: Install Terraform
       - name: Set up Terraform
@@ -32,12 +32,12 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      # Step 5: Terraform Plan (Corrected - using proper variable syntax)
+      # Step 5: Terraform Plan (with the proper GCP credentials injected)
       - name: Terraform Plan
-        run: terraform plan -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
+        run: terraform plan
         working-directory: terraform
 
       # Step 6: Terraform Apply
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
+        run: terraform apply -auto-approve
         working-directory: terraform
