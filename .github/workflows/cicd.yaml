@@ -18,7 +18,7 @@ jobs:
       # Step 2: Set up GCP credentials file
       - name: Set up GCP Credentials
         run: |
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/gcloud-key.json
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/gcloud-key.json
 
       # Step 3: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud
