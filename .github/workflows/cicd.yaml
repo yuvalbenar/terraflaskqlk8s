@@ -15,29 +15,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Google Cloud Authentication
+      # Step 2: Write GCP Credentials JSON from GitHub Secrets to a temporary file
+      - name: Write GCP Credentials to File
+        run: echo "${{ secrets.GCP_CREDENTIALS }}" > /tmp/gcp_credentials.json
+
+      # Step 3: Set up Google Cloud Authentication using the credentials file
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}  # Use GitHub Secrets if you still need it for Google Auth
+          credentials_json: /tmp/gcp_credentials.json
 
-      # Step 3: Install Terraform
+      # Step 4: Install Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
 
-      # Step 4: Initialize Terraform (now using terraform.tfvars)
+      # Step 5: Initialize Terraform
       - name: Terraform Init
         run: terraform init
         working-directory: terraform
 
-      # Step 5: Terraform Plan (uses terraform.tfvars automatically)
+      # Step 6: Terraform Plan
       - name: Terraform Plan
         run: terraform plan
         working-directory: terraform
 
-      # Step 6: Terraform Apply
+      # Step 7: Terraform Apply
       - name: Terraform Apply
         run: terraform apply -auto-approve
         working-directory: terraform
