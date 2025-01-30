@@ -17,13 +17,23 @@ jobs:
 
       # Step 2: Decode GCP credentials and store in a file
       - name: Decode GCP Credentials
-        run: echo "${{ secrets.GCP_CREDENTIALS_BASE64 }}" | base64 --decode > /tmp/gcp_credentials.json
+        run: |
+          echo "${{ secrets.GCP_CREDENTIALS_BASE64 }}" | base64 --decode > /tmp/gcp_credentials.json
+          # Check if the file has been created correctly
+          cat /tmp/gcp_credentials.json
 
       # Step 3: Set up Google Cloud Authentication using the Google Auth action
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
           credentials_json: /tmp/gcp_credentials.json
+          create_credentials_file: true
+          export_environment_variables: true
+          universe: googleapis.com
+          cleanup_credentials: true
+          access_token_lifetime: 3600s
+          access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+          id_token_include_email: false
 
       # Step 4: Install Terraform
       - name: Set up Terraform
