@@ -10,15 +10,12 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
-    env:
-      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Set the GCP credentials from GitHub Secrets
-
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Google Cloud Authentication (simplified approach)
+      # Step 2: Set up Google Cloud Authentication
       - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
@@ -35,7 +32,7 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      # Step 5: Terraform Plan
+      # Step 5: Terraform Plan (Corrected - using proper variable syntax)
       - name: Terraform Plan
         run: terraform plan -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform
