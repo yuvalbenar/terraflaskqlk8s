@@ -32,12 +32,12 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      # Step 5: Terraform Plan (with the proper GCP credentials injected)
+      # Step 5: Terraform Plan (passing the GCP_CREDENTIALS variable)
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform
 
-      # Step 6: Terraform Apply
+      # Step 6: Terraform Apply (passing the GCP_CREDENTIALS variable)
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
         working-directory: terraform
