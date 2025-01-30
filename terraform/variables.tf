@@ -1,4 +1,4 @@
 variable "GCP_CREDENTIALS" {
-  description = "GCP service account credentials JSON"
+  description = "Path to the GCP service account credentials JSON file"
   type        = string
 }

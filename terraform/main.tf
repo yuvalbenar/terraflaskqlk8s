@@ -1,9 +1,8 @@
 provider "google" {
   project     = "terraflaskqlk8s"  # Replace with your GCP project ID
   region      = "us-east1"          # Use the region (not zone, e.g., "us-east1")
-  credentials = jsondecode(var.GCP_CREDENTIALS)  # Decode the JSON string into a usable map
+  credentials = file(var.GCP_CREDENTIALS)  # Use the path to the credentials file
 }
-
 
 resource "google_container_cluster" "flasksql_cluster" {
   name               = "flasksql-cluster"
