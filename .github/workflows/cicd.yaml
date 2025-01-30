@@ -10,6 +10,9 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    env:
+      GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}  # Set the GCP credentials file from GitHub Secrets
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Code
@@ -18,7 +21,7 @@ jobs:
       # Step 2: Set up GCP credentials file
       - name: Set up GCP Credentials
         run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/gcloud-key.json
+          echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcloud-key.json
 
       # Step 3: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud
