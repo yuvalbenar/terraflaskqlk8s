@@ -37,4 +37,5 @@ jobs:
 
       # Step 5: Terraform Apply (no need to pass the credentials variable here)
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        terraform apply -auto-approve -var "GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
+
