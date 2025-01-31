@@ -1,7 +1,7 @@
 provider "google" {
-  project     = "terraflaskqlk8s"  # Replace with your GCP project ID
-  region      = "us-east1"          # Use the region (not zone, e.g., "us-east1")
-  credentials = null  # Let the provider automatically use the environment variable
+  project     = "terraflaskqlk8s"
+  region      = "us-east1"
+  credentials = file(var.GCP_CREDENTIALS)  # Use the variable here
 }
 
 
