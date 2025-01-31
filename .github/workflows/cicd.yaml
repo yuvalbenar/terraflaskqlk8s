@@ -1,5 +1,5 @@
 name: Terraform GKE Cluster Setup
-# this is a;most working! dont quit! not yet! 
+
 on:
   push:
     branches:
@@ -35,6 +35,6 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      # Step 5: Terraform Apply
+      # Step 5: Terraform Apply (no need to pass the credentials variable here)
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}"
+        run: terraform apply -auto-approve
