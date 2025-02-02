@@ -1,7 +1,7 @@
 provider "google" {
   project     = "terraflaskqlk8s"
   region      = "us-east1"
-  credentials = file(var.GCP_CREDENTIALS)  # Reference the variable
+  credentials = file(var.credentials_path)
 }
 
 
