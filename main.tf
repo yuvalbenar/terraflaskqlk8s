@@ -15,5 +15,5 @@ resource "google_container_cluster" "flasksql_cluster" {
   }
 
   # Optional settings like enabling Kubernetes Dashboard, etc.
-  enable_kubernetes_alpha = true
+  
 }
