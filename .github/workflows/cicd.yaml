@@ -34,9 +34,9 @@ jobs:
       - name: Terraform Init
         run: terraform init
         env:
-          TF_VAR_GCP_CREDENTIALS: "/tmp/gcp_credentials.json"
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          TF_VAR_GCP_CREDENTIALS: "/tmp/gcp_credentials.json"
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
