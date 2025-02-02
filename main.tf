@@ -1,7 +1,7 @@
 provider "google" {
   project     = "terraflaskqlk8s"
   region      = "us-east1"
-  credentials = jsondecode(var.GCP_CREDENTIALS)  # Decode JSON properly
+  credentials = file(var.GCP_CREDENTIALS)
 }
 
 
