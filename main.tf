@@ -1,8 +1,9 @@
 provider "google" {
   project     = "terraflaskqlk8s"
   region      = "us-east1"
-  credentials = var.GCP_CREDENTIALS  # Directly use the secret from the GitHub secret
+  credentials = jsondecode(var.GCP_CREDENTIALS)  # Decode JSON properly
 }
+
 
 
 resource "google_container_cluster" "flasksql_cluster" {
