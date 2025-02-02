@@ -23,6 +23,9 @@ jobs:
           universe: googleapis.com
           cleanup_credentials: true
 
+      - name: Write GCP Credentials to File
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -31,9 +34,9 @@ jobs:
       - name: Terraform Init
         run: terraform init
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          TF_VAR_GCP_CREDENTIALS: "/tmp/gcp_credentials.json"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          TF_VAR_GCP_CREDENTIALS: "/tmp/gcp_credentials.json"

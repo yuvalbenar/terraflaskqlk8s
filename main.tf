@@ -1,8 +1,9 @@
 provider "google" {
   project     = "terraflaskqlk8s"
   region      = "us-east1"
-  credentials = file(env.GOOGLE_APPLICATION_CREDENTIALS)
+  credentials = file(var.GCP_CREDENTIALS)  # Reference the variable
 }
+
 
 resource "google_container_cluster" "flasksql_cluster" {
   name               = "flasksql-cluster"
