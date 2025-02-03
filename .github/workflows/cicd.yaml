@@ -51,7 +51,7 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project $(jq -r .project_id /tmp/gcp_credentials.json)
+          gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${GCP_PROJECT_ID}
       - name: Deploy Kubernetes Resources
         run: |
           kubectl apply -f mysql-deployment.yaml
