@@ -1,3 +1,11 @@
+name: Terraform GKE Cluster Setup and Deploy
+
+on:
+  push:
+    branches:
+      - k8sdeploy
+  workflow_dispatch:
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
