@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  labels:
+    app: flask
+spec:
+  replicas: 2  # Running two instances for redundancy
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      containers:
+        - name: flask
+          image: yuvalbenar/flasksqlgifbase:v1.0.83  # Update if needed
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: flask-config
+                  key: database_host
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: flask-secrets
+                  key: database_user
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: flask-secrets
+                  key: database_password
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: flask-secrets
+                  key: database_name
+            - name: FLASK_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: flask-config
+                  key: flask_env
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-config
+data:
+  database_host: "gif-db"  # MySQL Service name
+  flask_env: "development"
