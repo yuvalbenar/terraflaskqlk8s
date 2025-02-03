@@ -3,7 +3,7 @@ name: Terraform GKE Cluster Setup and Deploy
 on:
   push:
     branches:
-      - main
+      - k8sdeploy
   workflow_dispatch:
 
 jobs:
