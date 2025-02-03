@@ -58,6 +58,11 @@ jobs:
           universe: googleapis.com
           cleanup_credentials: true
 
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          echo "Installing gke-gcloud-auth-plugin"
+          sudo apt-get update && sudo apt-get install -y gke-gcloud-auth-plugin
+
       - name: Configure kubectl
         run: |
           # Extracting project ID and zone from the GCP credentials directly
