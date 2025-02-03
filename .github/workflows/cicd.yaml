@@ -1,11 +1,3 @@
-name: Terraform GKE Cluster Setup and Deploy
-
-on:
-  push:
-    branches:
-      - k8sdeploy
-  workflow_dispatch:
-
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -24,7 +16,7 @@ jobs:
           cleanup_credentials: true
 
       - name: Write GCP Credentials to File
-        run: echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
+        run: echo "${{ secrets.GCP_CREDENTIALS }}" > /tmp/gcp_credentials.json
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -34,26 +26,18 @@ jobs:
       - name: Terraform Init
         run: terraform init
         env:
-          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Pass the correct path
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: terraform  # This ensures that the Terraform job runs before the deploy job
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Pass the correct path
 
       - name: Configure kubectl
         run: |
           gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project $(jq -r .project_id /tmp/gcp_credentials.json)
 
-      - name: Deploy Kubernetes Resources
+      - name: Apply Kubernetes YAMLs
         run: |
           kubectl apply -f mysql-deployment.yaml
           kubectl apply -f flask-app-deployment.yaml
