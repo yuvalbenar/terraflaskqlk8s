@@ -83,6 +83,31 @@ jobs:
           # Configuring kubectl with the correct project, zone, and cluster name
           gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${PROJECT_ID}
       
+      - name: Create k8secret.yaml from GitHub Secrets
+        run: |
+          echo "apiVersion: v1
+          kind: Secret
+          metadata:
+            name: flask-secrets
+          type: Opaque
+          data:
+            database_host: $(echo -n 'gif-db' | base64)  # base64 encoded value of 'gif-db'
+            database_user: $(echo -n '${{ secrets.DATABASE_USER }}' | base64)  # base64 encoded value from GitHub Secrets
+            database_password: $(echo -n '${{ secrets.DATABASE_PASSWORD }}' | base64)  # base64 encoded value from GitHub Secrets
+            database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)  # base64 encoded value from GitHub Secrets
+            flask_env: $(echo -n '${{ secrets.FLASK_ENV }}' | base64)  # base64 encoded value from GitHub Secrets
+          ---
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: mysql-secrets
+          type: Opaque
+          data:
+            user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)  # base64 encoded value from GitHub Secrets
+            password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)  # base64 encoded value from GitHub Secrets
+            database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)  # base64 encoded value from GitHub Secrets
+          " > k8secret.yaml
+
       - name: Deploy Kubernetes Resources
         run: |
           kubectl apply -f configmap.yaml    # Apply the ConfigMap first
