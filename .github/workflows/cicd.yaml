@@ -119,3 +119,13 @@ jobs:
       - name: Verify Kubernetes Services
         run: |
           kubectl get services
+
+      - name: Check Flask App Pods
+        run: |
+          echo "Checking if Flask app pods are running..."
+          kubectl get pods
+
+      - name: Port-forward Flask App for Local Access
+        run: |
+          echo "Port-forwarding Flask app to localhost..."
+          kubectl port-forward svc/flask-app 5000:5000
