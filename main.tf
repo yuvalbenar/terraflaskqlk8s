@@ -9,6 +9,7 @@ resource "google_container_cluster" "flasksql_cluster" {
   location           = "us-east1-b"   # Update this if needed
   initial_node_count = 1               # You can change the node count as needed
 
+  deletion_protection = false  # Disable deletion protection
   # Ensure the right service account is set
   node_config {
     service_account = "terracicd-sa@terraflaskqlk8s.iam.gserviceaccount.com"
