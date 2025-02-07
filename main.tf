@@ -7,7 +7,7 @@ provider "google" {
 resource "google_container_cluster" "flasksql_cluster" {
   name               = "flasksql-cluster"
   location           = "us-east1-b"   # Update this if needed
-  initial_node_count = 0               # You can change the node count as needed
+  initial_node_count = 1              # You can change the node count as needed
 
   deletion_protection = false  # Disable deletion protection
   # Ensure the right service account is set
