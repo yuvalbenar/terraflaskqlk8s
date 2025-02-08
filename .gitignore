@@ -11,3 +11,4 @@ gcp-key.json  # Don't commit your local credentials file
 terraform.tfstate
 terraform.tfstate.backup
 gcp_credentials.json
+configmap.yaml

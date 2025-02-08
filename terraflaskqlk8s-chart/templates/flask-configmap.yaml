@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.flaskConfig.name }}
+data:
+  database_host: {{ .Values.configmap.flaskConfig.data.database_host | quote }}
+  flask_env: {{ .Values.configmap.flaskConfig.data.flask_env | quote }}

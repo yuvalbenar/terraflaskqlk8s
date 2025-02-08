@@ -94,12 +94,10 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           " > k8secret.yaml
 
-      - name: Deploy Kubernetes Resources
+      - name: Deploy Helm Chart
         run: |
-          kubectl apply -f configmap.yaml
-          kubectl apply -f k8secret.yaml
-          kubectl apply -f mysql-deployment.yaml
-          kubectl apply -f flask-app-deployment.yaml
+          # Ensure the chart is installed/updated with the correct values
+          helm upgrade --install flasksqlgifbase ./terraflaskqlk8s/terraflaskqlk8s-chart --namespace default -f values.yaml
 
       - name: Wait for LoadBalancer IP
         run: |
@@ -114,5 +112,3 @@ jobs:
         run: |
           echo "Checking if Flask app pods are running..."
           kubectl get pods
-
-     
