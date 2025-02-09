@@ -95,21 +95,25 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
 
+      - name: Set Version
+        run: |
+          VERSION="0.0.${{ github.run_number }}"
+          echo "Version is $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Trigger Helm Chart Build
         run: |
           curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/yuvalbenar/helm-charts/dispatches \
-          -d '{"event_type": "trigger-helm-build"}'
-        env:
-          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/yuvalbenar/helm-charts/dispatches \
+            -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}'
 
-      - name: Wait for Helm Chart Update
+      - name: Wait for Helm chart update
         run: |
           echo "Waiting for updated Helm chart..."
           for i in {1..10}; do
-            if curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | grep "0.0.${{ github.run_number }}"; then
-              echo "Helm chart version 0.0.${{ github.run_number }} found. Proceeding."
+            if curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | grep "$VERSION"; then
+              echo "Helm chart version $VERSION found. Proceeding."
               exit 0
             fi
             echo "Helm chart update not found, retrying in 30 seconds..."
