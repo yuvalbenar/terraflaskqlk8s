@@ -65,10 +65,12 @@ jobs:
           echo "deb [signed-by=/etc/apt/trusted.gpg.d/google.asc] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
+
       - name: Install gke-gcloud-auth-plugin
         run: |
           echo "Installing gke-gcloud-auth-plugin"
           sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+
       - name: Configure kubectl
         run: |
           PROJECT_ID=$(echo '${{ secrets.GCP_CREDENTIALS }}' | jq -r .project_id)
@@ -77,6 +79,7 @@ jobs:
           echo "Using GCP Zone: ${GCP_ZONE}"
           echo "Extracted Project ID: ${PROJECT_ID}"
           gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${PROJECT_ID}
+
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
           echo "apiVersion: v1
@@ -90,23 +93,29 @@ jobs:
             user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           " > k8secret.yaml
+
+      - name: Add Helm Repository
+        run: |
+          helm repo add yuvalbenar https://yuvalbenar.github.io/helm-charts/
+
       - name: Update Helm Repositories
         run: |
           helm repo update
-      - name: Search for the flasksql-chart in the yuvalbenar repository
-        run: |
-          helm search repo yuvalbenar
+
       - name: Deploy Helm Chart
         run: |
           # Install or upgrade the terraflaskqlk8s chart from the yuvalbenar repository
           helm upgrade --install terraflaskqlk8s yuvalbenar/flasksql-chart --namespace default -f values.yaml
+
       - name: Wait for LoadBalancer IP
         run: |
           echo "Waiting for the LoadBalancer IP to be assigned..."
           sleep 60
+
       - name: Verify Kubernetes Services
         run: |
           kubectl get services
+
       - name: Check Flask App Pods
         run: |
           echo "Checking if Flask app pods are running..."
