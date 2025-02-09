@@ -4,4 +4,4 @@ metadata:
   name: {{ .Values.configmap.mysqlConfig.name }}
 data:
   init-db.sql: |-
-{{ .Values.configmap.mysqlConfig.data["init-db.sql"] | indent 4 }}
+    {{ index .Values.configmap.mysqlConfig.data "init-db.sql" | nindent 4 }}

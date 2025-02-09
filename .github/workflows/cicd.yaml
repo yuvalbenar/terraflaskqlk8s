@@ -49,7 +49,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Google Cloud Authentication (again)
+      - name: Set up Google Cloud Authentication
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
@@ -82,7 +82,8 @@ jobs:
 
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
-          echo "apiVersion: v1
+          cat <<EOF > k8secret.yaml
+          apiVersion: v1
           kind: Secret
           metadata:
             name: mysql-secrets
@@ -92,20 +93,30 @@ jobs:
             database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
             user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
-          " > k8secret.yaml
+          EOF
 
-      - name: Add Helm Repository
+      - name: Trigger Helm Chart Build
         run: |
-          helm repo add yuvalbenar https://yuvalbenar.github.io/helm-charts/
+          curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/yuvalbenar/helm-charts/dispatches \
+          -d '{"event_type": "trigger-helm-build"}'
+        env:
+          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
 
-      - name: Update Helm Repositories
+      - name: Wait for Helm Chart Update
         run: |
-          helm repo update
-
-      - name: Deploy Helm Chart
-        run: |
-          # Install or upgrade the terraflaskqlk8s chart from the yuvalbenar repository
-          helm upgrade --install terraflaskqlk8s yuvalbenar/flasksql-chart --namespace default -f values.yaml
+          echo "Waiting for updated Helm chart..."
+          for i in {1..10}; do
+            if curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | grep "0.0.${{ github.run_number }}"; then
+              echo "Helm chart version 0.0.${{ github.run_number }} found. Proceeding."
+              exit 0
+            fi
+            echo "Helm chart update not found, retrying in 30 seconds..."
+            sleep 30
+          done
+          echo "Error: Helm chart update not found after multiple retries. Exiting."
+          exit 1
 
       - name: Wait for LoadBalancer IP
         run: |

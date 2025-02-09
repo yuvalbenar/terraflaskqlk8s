@@ -29,4 +29,7 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
+{{- else }}
+# No autoscaling configuration provided
+# Add other configurations or remove this section entirely
 {{- end }}

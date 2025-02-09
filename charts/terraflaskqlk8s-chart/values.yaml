@@ -14,7 +14,7 @@ flask:
     pullPolicy: IfNotPresent
   containerPort: 5000
   service:
-    type: LoadBalancer
+    type: LoadBalancer   # <-- Ensure this is defined
     port: 5000
   # Environment values (populated via the flask-config ConfigMap)
   config:
@@ -46,6 +46,29 @@ mysql:
       configMapName: mysql-config
       mountPath: /docker-entrypoint-initdb.d/init-db.sql
       subPath: init-db.sql
+
+# ========================
+# Autoscaling settings
+# ========================
+autoscaling:
+  enabled: false   # Set this to true if you want to enable autoscaling
+  minReplicas: 1   # Optional, only needed if autoscaling is enabled
+  maxReplicas: 5   # Optional, only needed if autoscaling is enabled
+  targetCPUUtilizationPercentage: 80 # Optional, only needed if autoscaling is enabled
+  targetMemoryUtilizationPercentage: 80 # Optional, only needed if autoscaling is enabled
+
+# ========================
+# Ingress settings
+# ========================
+ingress:
+  enabled: false  # Set this to true if you want to enable ingress
+  # If enabled, you can specify ingress rules here
+  # For example:
+  #   annotations: {}
+  #   hosts:
+  #     - host: your-app.example.com
+  #       paths:
+  #         - /
 
 # ========================
 # ConfigMap Data

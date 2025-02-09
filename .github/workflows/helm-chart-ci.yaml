@@ -1,0 +1,64 @@
+name: Helm Chart CI
+
+on:
+  push:
+    paths:
+      - 'charts/**'
+    branches:
+      - k8sdeploy  # Change to the correct branch you're working on
+  repository_dispatch:
+    types: [trigger-helm-build]
+  workflow_dispatch:  # Add this line for manual trigger via the UI
+
+jobs:
+  helm-chart-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
+
+      - name: Update Helm Chart Version
+        run: |
+          cd charts/terraflaskqlk8s-chart
+          sed -i "s/version: .*/version: 0.0.${{ github.run_number }}/g" Chart.yaml
+          echo "# Auto-updated by CI workflow" >> Chart.yaml
+
+      - name: Package Helm Chart
+        run: |
+          cd charts
+          helm package terraflaskqlk8s-chart --destination .. 
+          cd .. 
+          ls -lrta
+
+      - name: Update Helm Repo Index
+        run: |
+          helm repo index --url https://yuvalbenar.github.io/helm-charts/ . 
+          ls -lrta
+
+      - name: Push Helm Chart to Repository
+        env:
+          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
+        run: |
+          git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
+          cd helmrepo
+          pwd
+
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions@github.com"
+
+          rm -f *.tgz && rm -f index.yaml
+          cp ../*.tgz . 
+          cp ../index.yaml . 
+          ls -lrta
+
+          git add .
+          git commit -m "Updated Helm chart to version 0.0.${{ github.run_number }}"
+          git push origin k8sdeploy  # Update to push to the correct branch
+
+          echo "Helm chart successfully updated!"
