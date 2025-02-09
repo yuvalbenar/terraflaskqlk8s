@@ -59,6 +59,6 @@ jobs:
 
           git add .
           git commit -m "Updated Helm chart to version 0.0.${{ github.run_number }}"
-          git push origin k8sdeploy  # Update to push to the correct branch
+          git push origin main  # Update to push to the correct branch
 
           echo "Helm chart successfully updated!"
