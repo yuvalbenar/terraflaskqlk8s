@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'charts/**'
+      - '.github/workflows/**' 
     branches:
       - k8sdeploy  # Change to the correct branch you're working on yeah
   repository_dispatch:
