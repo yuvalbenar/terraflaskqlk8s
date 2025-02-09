@@ -1,0 +1,25 @@
+apiVersion: v1
+entries:
+  flasksql-chart:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-02-08T22:59:18.5963351+02:00"
+    description: A Helm chart for deploying a Flask application with a MySQL backend.
+    digest: 22732c44c4611e266ae93035f748782d0a3df30416db0a9d5253702fc088024d
+    home: https://github.com/yuvalbenar/terraflaskqlk8s/tree/k8sdeploy
+    keywords:
+    - flask
+    - mysql
+    - helm
+    - kubernetes
+    maintainers:
+    - email: yuvalbenar@gmail.com
+      name: Yuval Ben Ari
+    name: flasksql-chart
+    sources:
+    - https://github.com/yuvalbenar/terraflaskqlk8s/tree/k8sdeploy
+    type: application
+    urls:
+    - https://yuvalbenar.github.io/helm-charts/flasksql-chart-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-02-08T22:59:18.5887512+02:00"
