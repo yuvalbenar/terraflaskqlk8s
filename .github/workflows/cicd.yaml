@@ -9,7 +9,6 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -44,7 +43,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: terraform
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -95,29 +93,11 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
 
-      - name: Set Version and Trigger Helm Chart CI
-        run: |
-          VERSION="0.0.${{ github.run_number }}"
-          echo "🔹 Version is $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "🚀 Triggering Helm Chart CI in terraflaskqlk8s with version: $VERSION"
-          
-          RESPONSE=$(curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"event_type": "update-chart", "client_payload": {"version": "'"$VERSION"'"}}' \
-            -s -w "%{http_code}" -o response.txt \
-            https://api.github.com/repos/yuvalbenar/helm-charts/dispatches)
-
-          cat response.txt | jq .message || echo "No error message"
-          
-          if [[ "$RESPONSE" -ne 204 ]]; then
-            echo "❌ Failed to trigger Helm Chart CI. HTTP Status: $RESPONSE"
-            exit 1
-          fi
-
       - name: Wait for Helm Chart Update
         run: |
-          echo "⏳ Waiting for updated Helm chart..."
+          # Use the same version scheme as in the helm-chart-ci workflow
+          VERSION="0.0.${{ github.run_number }}"
+          echo "⏳ Waiting for updated Helm chart for version $VERSION..."
           for i in {1..10}; do
             echo "🔍 Checking for version: $VERSION"
             curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | tee helm-index.yaml
@@ -135,7 +115,7 @@ jobs:
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
           helm repo update
-          helm upgrade --install flasksql-chart yuvalbenar/flasksql-chart \
+          helm upgrade --install flasksql-chart yuvalbenar/helm-charts \
             --namespace default \
             --set image.tag=$VERSION
 
