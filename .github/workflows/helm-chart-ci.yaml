@@ -2,7 +2,7 @@ name: Helm Chart CI
 
 on:
   repository_dispatch:
-    types: [trigger-helm-build]
+    types: [update-chart]  # Updated to match the dispatch type you'll use
   workflow_dispatch:
 
 jobs:
