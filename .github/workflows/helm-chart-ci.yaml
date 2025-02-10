@@ -32,12 +32,15 @@ jobs:
           echo "Setting new version to: $NEW_VERSION"
           # Update or create version.txt in the repo root
           echo "$NEW_VERSION" > version.txt
-          # Optionally, commit version.txt if you want it saved in the repo:
+          # Configure Git
           git config --global user.name "github-actions-bot"
           git config --global user.email "github-actions@github.com"
+          # Add and commit version.txt
           git add version.txt
           git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
-      
+          # Push the commit to the k8sdeploy branch
+          git push origin k8sdeploy
+
       - name: Update Helm Chart Version with New Version
         run: |
           # Read the version from version.txt
