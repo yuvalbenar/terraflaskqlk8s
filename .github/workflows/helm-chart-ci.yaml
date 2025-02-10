@@ -17,12 +17,14 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
-      - name: Update Helm Chart Version
+      - name: Update Helm Chart Version with GitHub Run Number
         run: |
           cd charts/terraflaskqlk8s-chart
-          # Use the passed version from the payload
-          sed -i "s/version: .*/version: ${{ github.event.client_payload.version }}/g" Chart.yaml
+          # Update Chart.yaml to use the dynamic version based on the GitHub run number.
+          sed -i "s/^version:.*/version: 0.1.${{ github.run_number }}/g" Chart.yaml
           echo "# Auto-updated by CI workflow" >> Chart.yaml
+          echo "Updated Chart.yaml:"
+          cat Chart.yaml
 
       - name: Package Helm Chart
         run: |
@@ -45,11 +47,13 @@ jobs:
           pwd
           git config --global user.name "github-actions-bot"
           git config --global user.email "github-actions@github.com"
+          # Remove the old packaged charts and index file
           rm -f *.tgz && rm -f index.yaml
+          # Copy the newly generated chart package and index file
           cp ../*.tgz .
           cp ../index.yaml .
           ls -lrta
           git add .
-          git commit -m "Updated Helm chart to version ${{ github.event.client_payload.version }}"
+          git commit -m "Updated Helm chart to version 0.1.${{ github.run_number }}"
           git push origin main
           echo "Helm chart successfully updated!"
