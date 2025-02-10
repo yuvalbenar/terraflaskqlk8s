@@ -104,12 +104,14 @@ jobs:
       - name: Trigger Helm Chart CI
         run: |
           echo "🚀 Triggering Helm Chart CI in terraflaskqlk8s with version: $VERSION"
+          
           RESPONSE=$(curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}' \
-            -s -o response.txt -w "%{http_code}" https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches)
-          
-          cat response.txt  # Debug: Show API response
+            -s -w "%{http_code}" -o response.txt \
+            https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches)
+
+          cat response.txt | jq .message || echo "No error message"
           
           if [[ "$RESPONSE" -ne 204 ]]; then
             echo "❌ Failed to trigger Helm Chart CI. HTTP Status: $RESPONSE"
