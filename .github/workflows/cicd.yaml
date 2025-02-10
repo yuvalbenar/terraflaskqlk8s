@@ -101,13 +101,20 @@ jobs:
           echo "Version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Debug GitHub API Call
+      - name: Trigger Helm Chart CI
         run: |
           echo "Triggering Helm Chart CI in terraflaskqlk8s"
-          curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
+          RESPONSE=$(curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}' \
-            -v https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches
+            -s -o response.txt -w "%{http_code}" https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches)
+          
+          cat response.txt  # Show GitHub API response for debugging
+          
+          if [[ "$RESPONSE" -ne 204 ]]; then
+            echo "❌ Failed to trigger Helm Chart CI. HTTP Status: $RESPONSE"
+            exit 1
+          fi
 
       - name: Wait for Helm Chart Update
         run: |
@@ -116,19 +123,26 @@ jobs:
             echo "Checking for version: $VERSION"
             curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | tee helm-index.yaml
             if grep "$VERSION" helm-index.yaml; then
-              echo "Helm chart version $VERSION found. Proceeding."
+              echo "✅ Helm chart version $VERSION found. Proceeding with deployment."
               exit 0
             fi
-            echo "Helm chart update not found, retrying in 30 seconds..."
+            echo "⏳ Helm chart update not found, retrying in 30 seconds..."
             sleep 30
           done
-          echo "Error: Helm chart update not found after multiple retries. Exiting."
+          echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
       - name: Wait for LoadBalancer IP
         run: |
           echo "Waiting for the LoadBalancer IP to be assigned..."
           sleep 60
+
+      - name: Deploy Updated Helm Chart to GKE
+        run: |
+          helm repo update
+          helm upgrade --install flasksql-chart yuvalbenar/flasksql-chart \
+            --namespace default \
+            --set image.tag=${VERSION}
 
       - name: Verify Kubernetes Services
         run: |
