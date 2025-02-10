@@ -20,8 +20,8 @@ jobs:
       - name: Update Helm Chart Version with GitHub Run Number
         run: |
           cd charts/terraflaskqlk8s-chart
-          # Update Chart.yaml to use the dynamic version based on the GitHub run number.
-          sed -i "s/^version:.*/version: 0.1.${{ github.run_number }}/g" Chart.yaml
+          # Ensure the version matches what cicd.yaml expects (0.0.X)
+          sed -i "s/^version:.*/version: 0.0.${{ github.run_number }}/g" Chart.yaml
           echo "# Auto-updated by CI workflow" >> Chart.yaml
           echo "Updated Chart.yaml:"
           cat Chart.yaml
@@ -54,6 +54,6 @@ jobs:
           cp ../index.yaml .
           ls -lrta
           git add .
-          git commit -m "Updated Helm chart to version 0.1.${{ github.run_number }}"
+          git commit -m "Updated Helm chart to version 0.0.${{ github.run_number }}"
           git push origin main
           echo "Helm chart successfully updated!"

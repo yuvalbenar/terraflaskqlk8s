@@ -101,12 +101,13 @@ jobs:
           echo "Version is $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Trigger Helm Chart Build
+      - name: Debug GitHub API Call
         run: |
+          echo "Triggering Helm Chart CI in terraflaskqlk8s"
           curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/yuvalbenar/helm-charts/dispatches \
-            -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}'
+            -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}' \
+            -v https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches
 
       - name: Wait for Helm chart update
         run: |
