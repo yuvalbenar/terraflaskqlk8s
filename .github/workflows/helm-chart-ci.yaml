@@ -1,12 +1,6 @@
 name: Helm Chart CI
 
 on:
-  push:
-    paths:
-      - 'charts/**'  # Trigger when Helm charts are modified
-      - '.github/workflows/**'  # Trigger if CI workflows change
-    branches:
-      - k8sdeploy  # Ensure it's the branch where changes occur
   repository_dispatch:
     types: [trigger-helm-build]
   workflow_dispatch:
@@ -28,9 +22,10 @@ jobs:
         run: |
           cd charts/terraflaskqlk8s-chart
           VERSION="${{ github.event.client_payload.version }}"
-          echo "Setting Helm chart version to: $VERSION"
+
+          echo "🔹 Setting Helm chart version to: $VERSION"
           
-          if [[ -z "$VERSION" ]]; then
+          if [ -z "$VERSION" ]; then
             echo "❌ Error: Version is empty. Exiting."
             exit 1
           fi
@@ -45,8 +40,8 @@ jobs:
       - name: Package Helm Chart
         run: |
           cd charts
-          helm package terraflaskqlk8s-chart --destination .. 
-          cd .. 
+          helm package terraflaskqlk8s-chart --destination ..
+          cd ..
           ls -lrta
 
       - name: Update Helm Repo Index
