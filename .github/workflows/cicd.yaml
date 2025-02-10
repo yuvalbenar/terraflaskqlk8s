@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - k8sdeploy
+    paths-ignore:
+      - 'charts/**'
+  pull_request:
+    branches:
+      - k8sdeploy
+    paths-ignore:
+      - 'charts/**'
   workflow_dispatch:
 
 jobs:
@@ -93,10 +100,11 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
 
-      - name: Read Version from version.txt
+      - name: Read Version from Remote version.txt
         id: get_version
         run: |
-          VERSION=$(cat version.txt)
+          # Fetch the latest version.txt from the k8sdeploy branch using curl
+          VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
       
