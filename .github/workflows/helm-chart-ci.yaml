@@ -2,21 +2,20 @@ name: Helm Chart CI
 
 on:
   push:
-    paths:
-      - 'charts/**'
     branches:
       - k8sdeploy
+    paths:
+      - 'charts/**'
   pull_request:
-    paths:
-      - 'charts/**'
     branches:
       - k8sdeploy
+    paths:
+      - 'charts/**'
   workflow_dispatch:
 
 jobs:
   helm-chart-update:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -26,11 +25,25 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
-      - name: Update Helm Chart Version with GitHub Run Number
+      - name: Set New Version and Update version.txt
         run: |
-          cd charts/terraflaskqlk8s-chart
-          VERSION="0.0.${{ github.run_number }}"
+          # Compute a new version using the run number
+          NEW_VERSION="0.0.${{ github.run_number }}"
+          echo "Setting new version to: $NEW_VERSION"
+          # Update or create version.txt in the repo root
+          echo "$NEW_VERSION" > version.txt
+          # Optionally, commit version.txt if you want it saved in the repo:
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions@github.com"
+          git add version.txt
+          git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
+      
+      - name: Update Helm Chart Version with New Version
+        run: |
+          # Read the version from version.txt
+          VERSION=$(cat version.txt)
           echo "🔹 Setting Helm chart version to: $VERSION"
+          cd charts/terraflaskqlk8s-chart
           sed -i "s/^version:.*/version: $VERSION/g" Chart.yaml
           echo "# Auto-updated by CI workflow" >> Chart.yaml
           echo "✅ Updated Chart.yaml:"
@@ -67,7 +80,7 @@ jobs:
           cp ../index.yaml .
           echo "📝 Committing updated Helm chart..."
           git add .
-          git commit -m "Updated Helm chart to version $VERSION"
+          git commit -m "Updated Helm chart to version $(cat ../version.txt)"
           echo "🚀 Pushing to main branch..."
           git push origin main
           echo "✅ Helm chart successfully updated!"
