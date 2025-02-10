@@ -20,7 +20,11 @@ jobs:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
           create_credentials_file: true
           export_environment_variables: true
+          universe: googleapis.com
           cleanup_credentials: true
+
+      - name: Write GCP Credentials to File
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > /tmp/gcp_credentials.json
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -29,9 +33,13 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        env:
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        env:
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,6 +55,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
           create_credentials_file: true
           export_environment_variables: true
+          universe: googleapis.com
           cleanup_credentials: true
 
       - name: Install Google Cloud SDK
@@ -71,30 +80,49 @@ jobs:
           echo "Extracted Project ID: ${PROJECT_ID}"
           gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${PROJECT_ID}
 
-      - name: Set Version for Dispatch
-        run: echo "VERSION=0.0.${{ github.run_number }}" >> $GITHUB_ENV
+      - name: Create k8secret.yaml from GitHub Secrets
+        run: |
+          cat <<EOF > k8secret.yaml
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: mysql-secrets
+          type: Opaque
+          data:
+            root_password: $(echo -n '${{ secrets.MYSQL_ROOT_PASSWORD }}' | base64)
+            database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
+            user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
+            password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
+          EOF
 
-      - name: Trigger Helm Chart CI
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.rest.repos.createDispatchEvent({
-              owner: 'yuvalbenar',
-              repo: 'helm-charts',
-              event_type: 'update-chart',
-              client_payload: {
-                version: "${{ env.VERSION }}"
-              }
-            })
+      - name: Set Version and Trigger Helm Chart CI
+        run: |
+          VERSION="0.0.${{ github.run_number }}"
+          echo "🔹 Version is $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "🚀 Triggering Helm Chart CI in terraflaskqlk8s with version: $VERSION"
+          
+          RESPONSE=$(curl -X POST -H "Authorization: token ${{ secrets.HELM_REPO_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"event_type": "update-chart", "client_payload": {"version": "'"$VERSION"'"}}' \
+            -s -w "%{http_code}" -o response.txt \
+            https://api.github.com/repos/yuvalbenar/helm-charts/dispatches)
+
+          cat response.txt | jq .message || echo "No error message"
+          
+          if [[ "$RESPONSE" -ne 204 ]]; then
+            echo "❌ Failed to trigger Helm Chart CI. HTTP Status: $RESPONSE"
+            exit 1
+          fi
 
       - name: Wait for Helm Chart Update
         run: |
           echo "⏳ Waiting for updated Helm chart..."
           for i in {1..10}; do
-            echo "🔍 Checking for version: ${{ env.VERSION }}"
+            echo "🔍 Checking for version: $VERSION"
             curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | tee helm-index.yaml
-            if grep "${{ env.VERSION }}" helm-index.yaml; then
-              echo "✅ Helm chart version ${{ env.VERSION }} found. Proceeding with deployment."
+            if grep "$VERSION" helm-index.yaml; then
+              echo "✅ Helm chart version $VERSION found. Proceeding with deployment."
               exit 0
             fi
             echo "⏳ Helm chart update not found, retrying in 30 seconds..."
@@ -106,11 +134,10 @@ jobs:
       - name: Deploy Updated Helm Chart to GKE
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
-          helm repo add yuvalbenar https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm upgrade --install flasksql-chart yuvalbenar/flasksql-chart \
             --namespace default \
-            --set image.tag="${{ env.VERSION }}"
+            --set image.tag=$VERSION
 
       - name: Verify Kubernetes Services
         run: |
