@@ -38,8 +38,8 @@ jobs:
           # Add and commit version.txt
           git add version.txt
           git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
-          # Push the commit to the k8sdeploy branch
-          git push origin k8sdeploy
+          # Push the commit to the k8sdeploy branch using GITHUB_TOKEN for authentication
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
 
       - name: Update Helm Chart Version with New Version
         run: |
