@@ -109,11 +109,13 @@ jobs:
             -d '{"event_type": "trigger-helm-build", "client_payload": {"version": "'"$VERSION"'"}}' \
             -v https://api.github.com/repos/yuvalbenar/terraflaskqlk8s/dispatches
 
-      - name: Wait for Helm chart update
+      - name: Wait for Helm Chart Update
         run: |
           echo "Waiting for updated Helm chart..."
           for i in {1..10}; do
-            if curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | grep "$VERSION"; then
+            echo "Checking for version: $VERSION"
+            curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | tee helm-index.yaml
+            if grep "$VERSION" helm-index.yaml; then
               echo "Helm chart version $VERSION found. Proceeding."
               exit 0
             fi

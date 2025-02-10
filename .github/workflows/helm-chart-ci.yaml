@@ -17,11 +17,11 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
-      - name: Update Helm Chart Version with GitHub Run Number
+      - name: Update Helm Chart Version
         run: |
           cd charts/terraflaskqlk8s-chart
-          # Ensure the version matches what cicd.yaml expects (0.0.X)
-          sed -i "s/^version:.*/version: 0.0.${{ github.run_number }}/g" Chart.yaml
+          # Use the version sent from the CICD workflow
+          sed -i "s/^version:.*/version: ${{ github.event.client_payload.version }}/g" Chart.yaml
           echo "# Auto-updated by CI workflow" >> Chart.yaml
           echo "Updated Chart.yaml:"
           cat Chart.yaml
@@ -29,14 +29,14 @@ jobs:
       - name: Package Helm Chart
         run: |
           cd charts
-          helm package terraflaskqlk8s-chart --destination ..
+          helm package terraflaskqlk8s-chart --destination .. 
           cd ..
           ls -lrta
 
       - name: Update Helm Repo Index
         run: |
-          helm repo index --url https://yuvalbenar.github.io/helm-charts/ .
-          ls -lrta
+          helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
+          cat index.yaml  # Debugging: Check if index.yaml updates properly
 
       - name: Push Helm Chart to Repository
         env:
@@ -44,16 +44,19 @@ jobs:
         run: |
           git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
           cd helmrepo
-          pwd
           git config --global user.name "github-actions-bot"
           git config --global user.email "github-actions@github.com"
+
           # Remove the old packaged charts and index file
           rm -f *.tgz && rm -f index.yaml
+          
           # Copy the newly generated chart package and index file
           cp ../*.tgz .
           cp ../index.yaml .
+
           ls -lrta
           git add .
-          git commit -m "Updated Helm chart to version 0.0.${{ github.run_number }}"
+          git commit -m "Updated Helm chart to version ${{ github.event.client_payload.version }}"
           git push origin main
+
           echo "Helm chart successfully updated!"
