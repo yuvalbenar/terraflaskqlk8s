@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform
     steps:
+      # Checkout and authenticate
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -63,6 +64,7 @@ jobs:
           universe: googleapis.com
           cleanup_credentials: true
 
+      # Install Google Cloud SDK
       - name: Install Google Cloud SDK
         run: |
           echo "Installing Google Cloud SDK"
@@ -71,12 +73,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
 
+      # Install Helm
       - name: Install Helm
         run: |
           echo "Installing Helm"
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
+      # Add and update Helm repository
       - name: Add and Update Helm Repository
         run: |
           echo "Adding Helm repository"
@@ -84,21 +88,25 @@ jobs:
           helm repo update
           helm search repo helmcharts --versions
 
+      # Install GKE plugin
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
           sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
 
+      # List GKE clusters (using hardcoded project name from Terraform output)
       - name: List GKE Clusters
         run: |
           echo "Listing GKE clusters"
           gcloud container clusters list --project terraflaskqlk8s
 
+      # Set the GKE context (using hard-coded cluster name and zone)
       - name: Set GKE Context to Connect to Cluster
         run: |
           echo "Setting GKE context"
           gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
 
+      # Create the Kubernetes Secret file from GitHub Secrets
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
           echo "Creating k8secret.yaml"
@@ -115,6 +123,7 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
 
+      # Read version from remote version.txt (must be updated by your helm-chart-ci pipeline)
       - name: Read Version from Remote version.txt
         id: get_version
         run: |
@@ -123,6 +132,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
 
+      # Wait for the Helm chart with the updated version to appear in the repository
       - name: Wait for Helm Chart Update
         run: |
           echo "⏳ Waiting for updated Helm chart for version $VERSION..."
@@ -139,10 +149,23 @@ jobs:
           echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
-      - name: Patch Existing Deployment 'gif-db' for Helm Adoption
+      # Patch legacy resources so that Helm can adopt them
+      - name: Patch Existing ConfigMaps for Helm Adoption
         run: |
-          echo "Patching Deployment 'gif-db' to include Helm ownership metadata"
-          kubectl patch deployment gif-db -n default --type merge -p '{
+          echo "Patching existing ConfigMap 'flask-config' to include Helm ownership metadata"
+          kubectl patch configmap flask-config -n default --type merge -p '{
+            "metadata": {
+              "labels": {
+                "app.kubernetes.io/managed-by": "Helm"
+              },
+              "annotations": {
+                "meta.helm.sh/release-name": "flasksql-chart",
+                "meta.helm.sh/release-namespace": "default"
+              }
+            }
+          }'
+          echo "Patching existing ConfigMap 'mysql-config' to include Helm ownership metadata"
+          kubectl patch configmap mysql-config -n default --type merge -p '{
             "metadata": {
               "labels": {
                 "app.kubernetes.io/managed-by": "Helm"
@@ -154,6 +177,22 @@ jobs:
             }
           }'
 
+      - name: Patch Existing Service 'gif-db' for Helm Adoption
+        run: |
+          echo "Patching Service 'gif-db' to include Helm ownership metadata"
+          kubectl patch service gif-db -n default --type merge -p '{
+            "metadata": {
+              "labels": {
+                "app.kubernetes.io/managed-by": "Helm"
+              },
+              "annotations": {
+                "meta.helm.sh/release-name": "flasksql-chart",
+                "meta.helm.sh/release-namespace": "default"
+              }
+            }
+          }'
+
+      # Deploy the Helm chart (upgrade or install the release)
       - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
