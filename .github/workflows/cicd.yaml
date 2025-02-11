@@ -124,11 +124,16 @@ jobs:
           echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
+      - name: Add Helm Repository
+        run: |
+          echo "Adding Helm repository"
+          helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
+          helm repo update
+
       - name: Deploy Updated Helm Chart to GKE
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
-          helm repo update
-          helm upgrade --install flasksql-chart yuvalbenar/helm-charts \
+          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
             --namespace default \
             --set image.tag=$VERSION
 
