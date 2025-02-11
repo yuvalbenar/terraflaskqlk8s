@@ -1,4 +1,4 @@
-name: Terraform GKE Cluster Setup and Deploy
+name: Terraform GKE Cluster Setup and Deploy via helm
 
 on:
   push:
