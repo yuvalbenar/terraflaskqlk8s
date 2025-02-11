@@ -2,7 +2,7 @@ apiVersion: v2
 name: flasksql-chart
 description: A Helm chart for deploying a Flask application with a MySQL backend.
 type: application
-version: 0.0.${{ github.run_number }}  # helm run post terraformdestroy
+version: 0.0.${{ github.run_number }}  # omigad so close 
 appVersion: "1.0"
 keywords:
   - flask
