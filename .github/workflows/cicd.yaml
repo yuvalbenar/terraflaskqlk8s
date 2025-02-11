@@ -107,7 +107,7 @@ jobs:
           VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
-      
+
       - name: Wait for Helm Chart Update
         run: |
           echo "⏳ Waiting for updated Helm chart for version $VERSION..."
@@ -129,23 +129,12 @@ jobs:
           echo "Adding Helm repository"
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
+          helm search repo helmcharts --versions
 
-      - name: Patch Existing ConfigMaps for Helm Adoption
+      - name: Patch Existing Service 'gif-db' for Helm Adoption
         run: |
-          echo "Patching existing ConfigMap 'flask-config' to include Helm ownership metadata"
-          kubectl patch configmap flask-config -n default --type merge -p '{
-            "metadata": {
-              "labels": {
-                "app.kubernetes.io/managed-by": "Helm"
-              },
-              "annotations": {
-                "meta.helm.sh/release-name": "flasksql-chart",
-                "meta.helm.sh/release-namespace": "default"
-              }
-            }
-          }'
-          echo "Patching existing ConfigMap 'mysql-config' to include Helm ownership metadata"
-          kubectl patch configmap mysql-config -n default --type merge -p '{
+          echo "Patching Service 'gif-db' to include Helm ownership metadata"
+          kubectl patch service gif-db -n default --type merge -p '{
             "metadata": {
               "labels": {
                 "app.kubernetes.io/managed-by": "Helm"
