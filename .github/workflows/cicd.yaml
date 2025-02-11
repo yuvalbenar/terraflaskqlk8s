@@ -139,6 +139,21 @@ jobs:
           echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
+      - name: Patch Existing Deployment 'gif-db' for Helm Adoption
+        run: |
+          echo "Patching Deployment 'gif-db' to include Helm ownership metadata"
+          kubectl patch deployment gif-db -n default --type merge -p '{
+            "metadata": {
+              "labels": {
+                "app.kubernetes.io/managed-by": "Helm"
+              },
+              "annotations": {
+                "meta.helm.sh/release-name": "flasksql-chart",
+                "meta.helm.sh/release-namespace": "default"
+              }
+            }
+          }'
+
       - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
