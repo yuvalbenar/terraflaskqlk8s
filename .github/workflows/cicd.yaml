@@ -71,22 +71,37 @@ jobs:
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
 
-      - name: Install gke-gcloud-auth-plugin
+      - name: Install Helm
         run: |
-          echo "Installing gke-gcloud-auth-plugin"
+          echo "Installing Helm"
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
+
+      - name: Add and Update Helm Repository
+        run: |
+          echo "Adding Helm repository"
+          helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
+          helm repo update
+          helm search repo helmcharts --versions
+
+      - name: Install GKE Google Plugin
+        run: |
+          echo "Installing GKE google plugin"
           sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
 
-      - name: Configure kubectl
+      - name: List GKE Clusters
         run: |
-          PROJECT_ID=$(echo '${{ secrets.GCP_CREDENTIALS }}' | jq -r .project_id)
-          GCP_ZONE="us-east1-b"
-          GCP_CLUSTER_NAME="flasksql-cluster"
-          echo "Using GCP Zone: ${GCP_ZONE}"
-          echo "Extracted Project ID: ${PROJECT_ID}"
-          gcloud container clusters get-credentials ${GCP_CLUSTER_NAME} --zone ${GCP_ZONE} --project ${PROJECT_ID}
+          echo "Listing GKE clusters"
+          gcloud container clusters list --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Set GKE Context to Connect to Cluster
+        run: |
+          echo "Setting GKE context"
+          gcloud container clusters get-credentials ${{ secrets.GCP_CLUSTER_NAME }} --project ${{ secrets.GCP_PROJECT_ID }} --zone ${{ secrets.GCP_ZONE }}
 
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
+          echo "Creating k8secret.yaml"
           cat <<EOF > k8secret.yaml
           apiVersion: v1
           kind: Secret
@@ -103,7 +118,7 @@ jobs:
       - name: Read Version from Remote version.txt
         id: get_version
         run: |
-          # Fetch the latest version.txt from the k8sdeploy branch using curl
+          echo "Reading version from remote version.txt"
           VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
@@ -124,29 +139,8 @@ jobs:
           echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
-      - name: Add Helm Repository
-        run: |
-          echo "Adding Helm repository"
-          helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
-          helm repo update
-          helm search repo helmcharts --versions
-
-      - name: Patch Existing Service 'gif-db' for Helm Adoption
-        run: |
-          echo "Patching Service 'gif-db' to include Helm ownership metadata"
-          kubectl patch service gif-db -n default --type merge -p '{
-            "metadata": {
-              "labels": {
-                "app.kubernetes.io/managed-by": "Helm"
-              },
-              "annotations": {
-                "meta.helm.sh/release-name": "flasksql-chart",
-                "meta.helm.sh/release-namespace": "default"
-              }
-            }
-          }'
-
-      - name: Deploy Updated Helm Chart to GKE
+    
+      - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
           helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
@@ -155,6 +149,7 @@ jobs:
 
       - name: Verify Kubernetes Services
         run: |
+          echo "Verifying Kubernetes Services"
           kubectl get services
 
       - name: Check Flask App Pods
