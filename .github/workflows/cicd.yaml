@@ -114,9 +114,12 @@ jobs:
             user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
-          echo "Applying k8secret.yaml to the cluster"
+
+      - name: Apply k8secret.yaml to Cluster
+        run: |
+          echo "Applying k8secret.yaml"
           kubectl apply -f k8secret.yaml -n default
-          
+
       - name: Read Version from Remote version.txt
         id: get_version
         run: |
