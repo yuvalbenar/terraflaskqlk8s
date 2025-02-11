@@ -63,6 +63,7 @@ jobs:
           universe: googleapis.com
           cleanup_credentials: true
 
+      # --- Install Google Cloud SDK
       - name: Install Google Cloud SDK
         run: |
           echo "Installing Google Cloud SDK"
@@ -71,12 +72,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
 
+      # --- Install Helm
       - name: Install Helm
         run: |
           echo "Installing Helm"
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
+      # --- Add and Update Helm Repository
       - name: Add and Update Helm Repository
         run: |
           echo "Adding Helm repository"
@@ -84,21 +87,25 @@ jobs:
           helm repo update
           helm search repo helmcharts --versions
 
+      # --- Install GKE Google Plugin
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
           sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
 
+      # --- List GKE Clusters
       - name: List GKE Clusters
         run: |
           echo "Listing GKE clusters"
           gcloud container clusters list --project ${{ secrets.GCP_PROJECT_ID }}
 
+      # --- Set GKE Context to Connect to Cluster
       - name: Set GKE Context to Connect to Cluster
         run: |
           echo "Setting GKE context"
           gcloud container clusters get-credentials ${{ secrets.GCP_CLUSTER_NAME }} --project ${{ secrets.GCP_PROJECT_ID }} --zone ${{ secrets.GCP_ZONE }}
 
+      # --- Create Kubernetes Secret from GitHub Secrets
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
           echo "Creating k8secret.yaml"
@@ -115,6 +122,7 @@ jobs:
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
           EOF
 
+      # --- Read Version from Remote version.txt
       - name: Read Version from Remote version.txt
         id: get_version
         run: |
@@ -123,6 +131,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
 
+      # --- Wait for Helm Chart Update
       - name: Wait for Helm Chart Update
         run: |
           echo "⏳ Waiting for updated Helm chart for version $VERSION..."
@@ -139,7 +148,7 @@ jobs:
           echo "❌ Error: Helm chart update not found after multiple retries. Exiting."
           exit 1
 
-    
+      # --- Deploy Flask App Using Helm, Updating Release
       - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
