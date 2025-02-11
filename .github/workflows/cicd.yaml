@@ -130,10 +130,22 @@ jobs:
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
 
-      - name: Patch Existing ConfigMap for Helm Adoption
+      - name: Patch Existing ConfigMaps for Helm Adoption
         run: |
           echo "Patching existing ConfigMap 'flask-config' to include Helm ownership metadata"
           kubectl patch configmap flask-config -n default --type merge -p '{
+            "metadata": {
+              "labels": {
+                "app.kubernetes.io/managed-by": "Helm"
+              },
+              "annotations": {
+                "meta.helm.sh/release-name": "flasksql-chart",
+                "meta.helm.sh/release-namespace": "default"
+              }
+            }
+          }'
+          echo "Patching existing ConfigMap 'mysql-config' to include Helm ownership metadata"
+          kubectl patch configmap mysql-config -n default --type merge -p '{
             "metadata": {
               "labels": {
                 "app.kubernetes.io/managed-by": "Helm"
