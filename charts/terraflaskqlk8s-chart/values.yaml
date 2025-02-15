@@ -9,8 +9,8 @@ flask:
   name: flask
   replicaCount: 2
   image:
-    repository: yuvalbenar/flasksqlgifbase
-    tag: "v1.0.83"
+    repository: yuvalbenar/terraflaskqlk8s
+    tag: "latest" 
     pullPolicy: IfNotPresent
   containerPort: 5000
   service:
