@@ -111,7 +111,7 @@ jobs:
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
-#boii
+
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
@@ -196,12 +196,12 @@ jobs:
             }
           }' || echo "Service 'gif-db' not found, skipping patch."
 
-      - name: Deploy Flask App Using Helm, Updating Release
+      - name: Deploy Helm Chart with CRDs
         run: |
-          echo "🚀 Deploying Helm Chart to GKE"
-          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
+          helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
             --namespace default \
-            --set image.tag=$VERSION --version $VERSION
+            -f charts/terraflaskqlk8s-chart/values.yaml \
+            --include-crds --force
 
       - name: Verify Kubernetes Services
         run: |
