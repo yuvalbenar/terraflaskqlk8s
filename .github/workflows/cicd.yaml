@@ -207,16 +207,38 @@ jobs:
         run: |
           echo "Verifying Kubernetes Services"
           kubectl get services
-#boyyy
+
       - name: Check Flask App Pods
         run: |
           echo "🔍 Checking if Flask app pods are running..."
-          kubectl get pods 
+          kubectl get pods
 
   verify-monitoring:
     runs-on: ubuntu-latest
     needs: deploy
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Google Cloud Authentication
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          create_credentials_file: true
+          export_environment_variables: true
+          universe: googleapis.com
+          cleanup_credentials: true
+
+      - name: Set GKE Context to Connect to Cluster
+        run: |
+          gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
+
+      - name: Install Helm and Add Prometheus Repo
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
+          helm repo update
+
       - name: Verify Monitoring Is Up & Running
         run: |
           set -x
