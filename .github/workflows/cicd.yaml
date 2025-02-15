@@ -111,7 +111,7 @@ jobs:
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
-#boiii
+
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
@@ -141,7 +141,7 @@ jobs:
             database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
             user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
-          EOF
+EOF
           echo "Applying k8secret.yaml to the cluster"
           kubectl apply -f k8secret.yaml -n default
 
@@ -196,12 +196,16 @@ jobs:
             }
           }' || echo "Service 'gif-db' not found, skipping patch."
 
-      - name: Deploy Flask App Using Helm, Updating Release
+      - name: Install CRDs for Prometheus Operator
         run: |
-          echo "🚀 Deploying Helm Chart to GKE"
-          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/servicemonitor.crd.yaml
+
+      - name: Deploy Helm Chart with CRDs
+        run: |
+          helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
             --namespace default \
-            --set image.tag=$VERSION --version $VERSION
+            -f charts/terraflaskqlk8s-chart/values.yaml \
+            --force
 
       - name: Verify Kubernetes Services
         run: |
