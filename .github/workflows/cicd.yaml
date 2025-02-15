@@ -229,6 +229,10 @@ jobs:
           universe: googleapis.com
           cleanup_credentials: true
 
+      - name: Install GKE Auth Plugin
+        run: |
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
       - name: Set GKE Context to Connect to Cluster
         run: |
           gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
