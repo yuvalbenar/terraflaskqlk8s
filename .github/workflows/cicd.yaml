@@ -207,11 +207,11 @@ jobs:
         run: |
           echo "Verifying Kubernetes Services"
           kubectl get services
-
+#boyyy
       - name: Check Flask App Pods
         run: |
           echo "🔍 Checking if Flask app pods are running..."
-          kubectl get pods
+          kubectl get pods 
 
   verify-monitoring:
     runs-on: ubuntu-latest
