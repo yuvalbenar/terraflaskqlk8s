@@ -141,7 +141,7 @@ jobs:
             database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
             user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
             password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
-EOF
+          EOF
           echo "Applying k8secret.yaml to the cluster"
           kubectl apply -f k8secret.yaml -n default
 
