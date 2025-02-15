@@ -102,7 +102,7 @@ jobs:
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
           echo "Creating k8secret.yaml"
-          cat <<-EOF > k8secret.yaml
+          cat <<EOF > k8secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -113,7 +113,7 @@ data:
   database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
   user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
   password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
-<<-EOF
+EOF
           echo "Applying k8secret.yaml to the cluster"
           kubectl apply -f k8secret.yaml -n default
 
