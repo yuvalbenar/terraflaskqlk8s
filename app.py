@@ -6,7 +6,7 @@ from flask import Flask, render_template, Response
 from dotenv import load_dotenv
 from mysql.connector import Error
 from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
-from prometheus_flask_exporter import PrometheusMetrics
+
 
 # Load environment variables from .env file or GitHub secrets
 load_dotenv()
