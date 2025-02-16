@@ -192,13 +192,12 @@ jobs:
           --namespace monitoring \
           --create-namespace
 
-      - name: Deploy Flask App using Helm, updating release
+      - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
-          helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
-          --namespace default \
-          -f charts/terraflaskqlk8s-chart/values.yaml \
-          --set image.tag=$VERSION --version $VERSION \
+          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
+            --namespace default \
+            --set image.tag=$VERSION --version $VERSION
           
 
       - name: Verify Kubernetes Services
