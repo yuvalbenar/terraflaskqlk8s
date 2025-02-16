@@ -1,2 +1,2 @@
 prometheus:
-  serviceMonitorSelectorNilUsesHelmValues: true
+  serviceMonitorSelectorNilUsesHelmValues: false
