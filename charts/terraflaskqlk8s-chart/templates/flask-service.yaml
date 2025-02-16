@@ -3,12 +3,13 @@ kind: Service
 metadata:
   name: {{ .Values.flask.name }}
   labels:
-    app: flask   # Consistent label across resources
+    app: flask   # Ensure consistency across related resources
 spec:
   selector:
-    app: flask   # Matches the label on your Pods (Deployment)
+    matchLabels:  # <-- Ensure correct selector format
+      app: flask
   ports:
-    - name: http    # Port name must match the ServiceMonitor endpoint
+    - name: http    # Port name must match ServiceMonitor endpoint
       protocol: TCP
       port: {{ .Values.flask.service.port }}
       targetPort: {{ .Values.flask.containerPort }}

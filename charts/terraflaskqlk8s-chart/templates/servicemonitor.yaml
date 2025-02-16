@@ -1,7 +1,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: flask-app-monitor
+  name: flask
   namespace: monitoring
   labels:
     release: my-monitoring
@@ -10,7 +10,11 @@ spec:
     matchLabels:
       app: flask    # Updated to match your Service label
   endpoints:
-    - port: http
+    -ports:
+     - name: http   # <--- Add this
+       port: 5000
+       targetPort: 5000
+
       path: /metrics
       interval: 15s
   namespaceSelector:
