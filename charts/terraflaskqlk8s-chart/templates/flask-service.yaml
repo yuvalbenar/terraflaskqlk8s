@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ .Values.flask.name }}
   labels:
-    app: flask-app   # Explicit label for ServiceMonitor selection
+    app: flask  # Explicit label for ServiceMonitor selection
 spec:
   selector:
     app: flask
