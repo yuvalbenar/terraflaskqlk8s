@@ -197,7 +197,7 @@ jobs:
           echo "🚀 Deploying Helm Chart to GKE"
           helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
           --namespace default \
-          -f charts/terraflaskqlk8s-chart/values.yaml- \
+          -f charts/terraflaskqlk8s-chart/values.yaml \
           --set image.tag=$VERSION --version $VERSION \
           
 
