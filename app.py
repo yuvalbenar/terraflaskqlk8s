@@ -52,6 +52,10 @@ def metrics():
     # Connect to the database to get the visitor count
     connection = get_db_connection()
     cursor = connection.cursor()
+    # Increment the visitor counter
+    cursor.execute("UPDATE visitor_counter SET count = count + 1 WHERE id = 1")
+    connection.commit()
+    #fetch a random image url
     cursor.execute("SELECT count FROM visitor_counter WHERE id = 1")
     result = cursor.fetchone()
     if result:
