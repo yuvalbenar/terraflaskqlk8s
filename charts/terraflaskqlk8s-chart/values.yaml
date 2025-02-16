@@ -16,6 +16,7 @@ flask:
   service:
     type: LoadBalancer   # <-- Ensure this is defined
     port: 5000
+    portName: http 
   # Environment values (populated via the flask-config ConfigMap)
   config:
     databaseHost: "gif-db"      # The host for the MySQL service
