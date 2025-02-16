@@ -195,10 +195,10 @@ jobs:
       - name: Deploy Flask App using Helm, updating release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
-            helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
+          helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
           --namespace default \
           -f charts/terraflaskqlk8s-chart/values.yaml- \
-          -set image.tag=$VERSION --version $VERSION \
+          --set image.tag=$VERSION --version $VERSION \
           
 
       - name: Verify Kubernetes Services
