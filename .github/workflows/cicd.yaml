@@ -100,6 +100,18 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
 
+      - name: Read Version from Remote version.txt
+        id: get_version
+        run: |
+          echo "Reading version from remote version.txt"
+          VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          if [ -z "$VERSION" ]; then
+            echo "❌ ERROR: VERSION is empty!"
+            exit 1
+          fi
+
       - name: Deploy Flask App Using Helm
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
