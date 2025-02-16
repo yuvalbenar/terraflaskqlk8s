@@ -106,7 +106,7 @@ jobs:
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
-#boyyihhjamesjj
+#boyyihhjamesjjssd
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
