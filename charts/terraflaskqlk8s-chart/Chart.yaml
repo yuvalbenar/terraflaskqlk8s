@@ -2,7 +2,7 @@ apiVersion: v2
 name: flasksql-chart
 description: A Helm chart for deploying a Flask application with a MySQL backend.
 type: application
-version: 0.0.${{ github.run_number }}  # shablolmisken meod nora ayom wonderfull louis armstrong
+version: 0.0.${{ github.run_number }}  #  louis armstrong is a LIER
 appVersion: "1.0"
 keywords:
   - flask

@@ -260,5 +260,6 @@ jobs:
           if kubectl get pods -n monitoring | grep -qi grafana; then
             echo "Monitor stack is up & running."
           else
-            helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack -n monitoring -f prometheus_values.yaml
+            helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \
+             --namespace monitoring --create namespace -f prometheus_values.yaml
           fi
