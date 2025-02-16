@@ -5,4 +5,3 @@ Werkzeug==2.0.3   # Downgrade to a compatible version
 pytest==7.2.0 
 requests==2.26.0
 prometheus_client==0.16.0
-prometheus_flask_exporter==0.23.1
