@@ -6,8 +6,7 @@ metadata:
     app: flask   # Ensure consistency across related resources
 spec:
   selector:
-    matchLabels:  # <-- Ensure correct selector format
-      app: flask
+    app: flask  # ✅ Correct selector format (key-value pair)
   ports:
     - name: http    # Port name must match ServiceMonitor endpoint
       protocol: TCP
