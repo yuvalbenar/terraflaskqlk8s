@@ -197,7 +197,7 @@ jobs:
           echo "🚀 Deploying Helm Chart to GKE"
           helm upgrade --install flasksql-chart charts/terraflaskqlk8s-chart \
           --namespace default \
-          --set image.tag=$VERSION --version $VERSION \
+          --set image.tag=$VERSION  \
           -f charts/terraflaskqlk8s-chart/values.yaml
 
       - name: Verify Kubernetes Services
