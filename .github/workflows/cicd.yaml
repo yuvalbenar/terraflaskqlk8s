@@ -196,17 +196,14 @@ jobs:
             }
           }' || echo "Service 'gif-db' not found, skipping patch."
 
-      - name: Install CRDs for Prometheus Operator
-        run: |
-          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.57.0/example/prometheus-operator-crd/servicemonitor.crd.yaml
-
+      
       - name: Deploy Helm Chart with CRDs
         run: |
           helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
             --namespace default \
-            -f charts/terraflaskqlk8s-chart/values.yaml \
-            --force
-
+            --set image.tag=$VERSION --version $VERSION
+            -f charts/terraflaskqlk8s-chart/values.yaml
+            
       - name: Verify Kubernetes Services
         run: |
           echo "Verifying Kubernetes Services"
