@@ -103,7 +103,7 @@ jobs:
       - name: Deploy Flask App Using Helm
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
-          helm upgrade --install flasksql-chart ./charts/terraflaskqlk8s-chart \
+          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
             --namespace default \
             -f charts/terraflaskqlk8s-chart/values.yaml \
             --set image.tag=$VERSION --version $VERSION
