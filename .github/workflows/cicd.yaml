@@ -248,5 +248,6 @@ jobs:
           helm repo update
       - name: Verify Monitoring Is Up & Running
         run: |
-          helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \ --namespace  monitoring --creat-namespace -f prometheus_values.yaml
+          helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \
+          --namespace monitoring --create-namespace -f prometheus_values.yaml
           
