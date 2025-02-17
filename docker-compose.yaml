@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: yuvalbenar/flasksqlgifbase:${IMAGE_TAG}
+    image: yuvalbenar/terraflaskqlk8s:latest
     container_name: flaskgif
     ports:
       - "5000:5000"

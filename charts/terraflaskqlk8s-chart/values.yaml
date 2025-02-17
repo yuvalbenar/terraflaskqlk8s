@@ -7,7 +7,7 @@ global:
 # ========================
 flask:
   name: flask
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: yuvalbenar/terraflaskqlk8s
     tag: "latest" 
