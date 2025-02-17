@@ -3,12 +3,14 @@ kind: ServiceMonitor
 metadata:
   name: flask-app-monitor
   namespace: monitoring  # The namespace where Prometheus is installed
+  labels:
+    release: my-monitoring  # Ensure this matches your Prometheus serviceMonitorSelector
 spec:
   selector:
     matchLabels:
-      app: flask  # This matches the label we just added
+      app: flask  # This should match the label on your Flask Service
   endpoints:
-    - port: http  # Make sure your service port has this name; if not, update it accordingly
+    - port: http  # Make sure your service port is named "http"
       path: /metrics
       interval: 15s
   namespaceSelector:
