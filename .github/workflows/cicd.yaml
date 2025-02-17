@@ -106,7 +106,7 @@ jobs:
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
-#ah hell nooooooo oh  yes comonn
+#ah hell
       - name: Install GKE Google Plugin
         run: |
           echo "Installing GKE google plugin"
@@ -183,15 +183,7 @@ jobs:
               "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
             }
           }' || echo "Service 'gif-db' not found, skipping patch."
-      
-      - name: Install Prometheus Operator via Helm
-        run: |
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo update
-          helm upgrade --install prometheus-operator prometheus-community/kube-prometheus-stack \
-          --namespace monitoring \
-          --create-namespace
-
+    
       - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
@@ -256,5 +248,5 @@ jobs:
           helm repo update
       - name: Verify Monitoring Is Up & Running
         run: |
-          helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack -n monitoring -f prometheus_values.yaml
+          helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \ --namespace  monitoring --creat-namespace -f prometheus_values.yaml
           
