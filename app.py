@@ -44,6 +44,7 @@ def index():
     # Increment the visitor counter
     cursor.execute("UPDATE visitor_counter SET count = count + 1 WHERE id = 1")
     connection.commit()
+    print("Rows affected:", cursor.rowcount)
     #fetch a random image url
     cursor.execute("SELECT url FROM images ORDER BY RAND() LIMIT 1")
     random_image = cursor.fetchone()[0]
