@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - k8sdeploy
-    paths-ignore:
-      - 'charts/**'
-  pull_request:
-    branches:
-      - k8sdeploy
-    paths-ignore:
-      - 'charts/**'
   workflow_dispatch:
 
 jobs:

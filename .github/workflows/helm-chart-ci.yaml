@@ -1,89 +1,89 @@
-name: Helm Chart CI
+# name: Helm Chart CI
 
-on:
-  push:
-    branches:
-      - k8sdeploy
-    paths:
-      - 'charts/**'
-  pull_request:
-    branches:
-      - k8sdeploy
-    paths:
-      - 'charts/**'
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - k8sdeploy
+#     paths:
+#       - 'charts/**'
+#   pull_request:
+#     branches:
+#       - k8sdeploy
+#     paths:
+#       - 'charts/**'
+#   workflow_dispatch:
 
-jobs:
-  helm-chart-update:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+# jobs:
+#   helm-chart-update:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
 
-      - name: Install Helm
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-          helm version
+#       - name: Install Helm
+#         run: |
+#           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+#           helm version
 
-      - name: Set New Version and Update version.txt
-        run: |
-          # Compute a new version using the run number
-          NEW_VERSION="0.0.${{ github.run_number }}"
-          echo "Setting new version to: $NEW_VERSION"
-          # Update or create version.txt in the repo root
-          echo "$NEW_VERSION" > version.txt
-          # Configure Git
-          git config --global user.name "github-actions-bot"
-          git config --global user.email "github-actions@github.com"
-          # Add and commit version.txt
-          git add version.txt
-          git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
-          # Push the commit to the k8sdeploy branch using GITHUB_TOKEN for authentication
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
+#       - name: Set New Version and Update version.txt
+#         run: |
+#           # Compute a new version using the run number
+#           NEW_VERSION="0.0.${{ github.run_number }}"
+#           echo "Setting new version to: $NEW_VERSION"
+#           # Update or create version.txt in the repo root
+#           echo "$NEW_VERSION" > version.txt
+#           # Configure Git
+#           git config --global user.name "github-actions-bot"
+#           git config --global user.email "github-actions@github.com"
+#           # Add and commit version.txt
+#           git add version.txt
+#           git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
+#           # Push the commit to the k8sdeploy branch using GITHUB_TOKEN for authentication
+#           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
 
-      - name: Update Helm Chart Version with New Version
-        run: |
-          # Read the version from version.txt
-          VERSION=$(cat version.txt)
-          echo "🔹 Setting Helm chart version to: $VERSION"
-          cd charts/terraflaskqlk8s-chart
-          sed -i "s/^version:.*/version: $VERSION/g" Chart.yaml
-          echo "# Auto-updated by CI workflow" >> Chart.yaml
-          echo "✅ Updated Chart.yaml:"
-          cat Chart.yaml
+#       - name: Update Helm Chart Version with New Version
+#         run: |
+#           # Read the version from version.txt
+#           VERSION=$(cat version.txt)
+#           echo "🔹 Setting Helm chart version to: $VERSION"
+#           cd charts/terraflaskqlk8s-chart
+#           sed -i "s/^version:.*/version: $VERSION/g" Chart.yaml
+#           echo "# Auto-updated by CI workflow" >> Chart.yaml
+#           echo "✅ Updated Chart.yaml:"
+#           cat Chart.yaml
 
-      - name: Package Helm Chart
-        run: |
-          cd charts
-          helm package terraflaskqlk8s-chart --destination ..
-          cd ..
-          ls -lrta
+#       - name: Package Helm Chart
+#         run: |
+#           cd charts
+#           helm package terraflaskqlk8s-chart --destination ..
+#           cd ..
+#           ls -lrta
 
-      - name: Update Helm Repo Index
-        run: |
-          echo "🔄 Updating Helm repo index..."
-          helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
-          echo "✅ Updated index.yaml:"
-          cat index.yaml
+#       - name: Update Helm Repo Index
+#         run: |
+#           echo "🔄 Updating Helm repo index..."
+#           helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
+#           echo "✅ Updated index.yaml:"
+#           cat index.yaml
 
-      - name: Push Helm Chart to Repository
-        env:
-          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
-        run: |
-          echo "📥 Cloning helm-charts repository..."
-          git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
-          cd helmrepo
-          echo "⚙️ Configuring Git..."
-          git config --global user.name "github-actions-bot"
-          git config --global user.email "github-actions@github.com"
-          echo "🗑 Removing old Helm packages and index..."
-          rm -f *.tgz && rm -f index.yaml
-          echo "📂 Copying new Helm chart and index.yaml..."
-          cp ../*.tgz .
-          cp ../index.yaml .
-          echo "📝 Committing updated Helm chart..."
-          git add .
-          git commit -m "Updated Helm chart to version $(cat ../version.txt)"
-          echo "🚀 Pushing to main branch..."
-          git push origin main
-          echo "✅ Helm chart successfully updated!"
+#       - name: Push Helm Chart to Repository
+#         env:
+#           HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
+#         run: |
+#           echo "📥 Cloning helm-charts repository..."
+#           git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
+#           cd helmrepo
+#           echo "⚙️ Configuring Git..."
+#           git config --global user.name "github-actions-bot"
+#           git config --global user.email "github-actions@github.com"
+#           echo "🗑 Removing old Helm packages and index..."
+#           rm -f *.tgz && rm -f index.yaml
+#           echo "📂 Copying new Helm chart and index.yaml..."
+#           cp ../*.tgz .
+#           cp ../index.yaml .
+#           echo "📝 Committing updated Helm chart..."
+#           git add .
+#           git commit -m "Updated Helm chart to version $(cat ../version.txt)"
+#           echo "🚀 Pushing to main branch..."
+#           git push origin main
+#           echo "✅ Helm chart successfully updated!"
