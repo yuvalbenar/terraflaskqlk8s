@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from mysql.connector import Error
 from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
 
-
 # Load environment variables from .env file or GitHub secrets
 load_dotenv()
 
@@ -68,6 +67,10 @@ def metrics():
 
     # Return the Prometheus metrics data
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+@app.route('/healthz')
+def health_check():
+    return "OK", 200  # Simple health check endpoint
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

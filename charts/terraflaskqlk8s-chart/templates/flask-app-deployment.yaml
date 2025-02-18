@@ -49,13 +49,13 @@ spec:
                   key: database_name
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz  # A new dedicated health check path
               port: {{ .Values.flask.containerPort }}
             initialDelaySeconds: {{ .Values.flask.probes.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.flask.probes.readiness.periodSeconds }}
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz  # A new dedicated health check path
               port: {{ .Values.flask.containerPort }}
             initialDelaySeconds: {{ .Values.flask.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.flask.probes.liveness.periodSeconds }}
