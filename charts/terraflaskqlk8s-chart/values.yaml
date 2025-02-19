@@ -11,7 +11,7 @@ flask:
   image:
     repository: yuvalbenar/terraflaskqlk8s
     tag: "latest" 
-    pullPolicy: IfNotPresent
+    pullPolicy: always
   containerPort: 5000
   service:
     type: LoadBalancer   # <-- Ensure this is defined
