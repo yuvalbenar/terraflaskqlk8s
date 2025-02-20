@@ -13,7 +13,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 1. Set all requested environment variables from secrets
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Set Environment Variables
         run: |
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
@@ -29,19 +34,11 @@ jobs:
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # 2. Define image name/tag in the environment
       - name: Set Image Name and Tag
         run: |
           echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
 
-      # 3. Build with Docker Compose and tag
       - name: Build Docker Compose Image
         run: |
           pwd
@@ -49,14 +46,12 @@ jobs:
           docker compose build --no-cache
           docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
-      # 4. Push the Docker image to Docker Hub
       - name: Push Docker Image
         run: |
           docker images
           docker push $IMAGE_NAME:$IMAGE_TAG
           docker push $IMAGE_NAME:latest
 
-      # 5. Test running the project with Docker Compose
       - name: Test - Running Project
         run: |
           ls
@@ -65,7 +60,6 @@ jobs:
           sleep 1
           docker compose ps
 
-      # 6. Run basic test (health-check via curl to the container)
       - name: Run Tests
         run: |
           sleep 3
@@ -74,7 +68,6 @@ jobs:
           curl -f http://localhost:${{ env.PORT }}
           echo "tests passed.."
 
-      # Helm install + chart packaging steps
       - name: Install Helm
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -116,7 +109,7 @@ jobs:
 
       - name: Push Helm Chart to Repository
         env:
-          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
+          HELM_REPO_PAT: ${{ env.HELM_REPO_PAT }}
         run: |
           echo "📥 Cloning helm-charts repository..."
           git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
