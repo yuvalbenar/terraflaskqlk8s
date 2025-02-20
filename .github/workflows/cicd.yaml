@@ -1,9 +1,5 @@
 name: Terraform GKE Cluster Setup and Deploy via helm
 
-env:
-  IMAGE_NAME: yuvalbenar/terraflaskqlk8s
-  IMAGE_TAG: ${{ github.run_number }}
-
 on:
   push:
     branches:
@@ -17,93 +13,72 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set Build Environment Variables
+      # 1. Set all requested environment variables from secrets
+      - name: Set Environment Variables
         run: |
-          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
-          echo "Built IMAGE_TAG=${{ github.run_number }}"
-
-      - name: Build Docker Image
-        run: |
-          docker build --no-cache --pull -t $IMAGE_NAME:$IMAGE_TAG .
-          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-
-      - name: Push Docker Image
-        run: |
-          docker push $IMAGE_NAME:$IMAGE_TAG
-          docker push $IMAGE_NAME:latest
-
-  build-Test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set Test Environment Variables
-        run: |
-          # Re-set IMAGE_TAG here to ensure consistency in this job.
-          echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
-          echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
-          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> $GITHUB_ENV
           echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> $GITHUB_ENV
+          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> $GITHUB_ENV
+          echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_ENV
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_ENV
+          echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
+          echo "GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}" >> $GITHUB_ENV
+          echo "HELM_REPO_PAT=${{ secrets.HELM_REPO_PAT }}" >> $GITHUB_ENV
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
-          echo "Retaining IMAGE_TAG=${{ github.run_number }}"
 
-      - name: Debug Environment Variables
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 2. Define image name/tag in the environment
+      - name: Set Image Name and Tag
         run: |
-          echo "IMAGE_NAME=${IMAGE_NAME}"
-          echo "IMAGE_TAG=${IMAGE_TAG}"
-          echo "PORT=${PORT}"
+          echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
 
+      # 3. Build with Docker Compose and tag
       - name: Build Docker Compose Image
         run: |
+          pwd
+          ls
           docker compose build --no-cache
-          # Use the same IMAGE_TAG to tag the image built by docker compose
-          docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
-      - name: Push Docker Image (Test Stage)
+      # 4. Push the Docker image to Docker Hub
+      - name: Push Docker Image
         run: |
-          docker push ${IMAGE_NAME}:${IMAGE_TAG}
-          docker push ${IMAGE_NAME}:latest
+          docker images
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:latest
 
+      # 5. Test running the project with Docker Compose
       - name: Test - Running Project
         run: |
+          ls
+          docker images
           docker compose up -d
-          sleep 5
+          sleep 1
           docker compose ps
 
+      # 6. Run basic test (health-check via curl to the container)
       - name: Run Tests
         run: |
           sleep 3
           docker compose logs
-          echo "Testing on port: ${PORT}"
-          curl -f http://localhost:${PORT}
-          echo "Tests passed..."
+          echo "port being tested: ${{ env.PORT }}"
+          curl -f http://localhost:${{ env.PORT }}
+          echo "tests passed.."
 
-  helm:
-    runs-on: ubuntu-latest
-    needs: build-Test
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      # Helm install + chart packaging steps
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
 
       - name: Set New Version and Update version.txt
         run: |
@@ -163,7 +138,7 @@ jobs:
 
   terraform:
     runs-on: ubuntu-latest
-    needs: helm
+    needs: build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -229,9 +204,9 @@ jobs:
           helm repo update
           helm search repo helmcharts --versions
 
-      - name: Install GKE Auth Plugin
+      - name: Install GKE Google Plugin
         run: |
-          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+          sudo apt-get update && sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
 
       - name: List GKE Clusters
         run: |
