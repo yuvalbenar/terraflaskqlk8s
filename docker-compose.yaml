@@ -1,4 +1,4 @@
-version: '3'  #actaullyworks! first version using terraform on aws without cicd and k8s, tommarow we tackle the pipeline!
+version: '3'
 services:
   flaskgif:
     build:
@@ -12,7 +12,6 @@ services:
       - gif-db
     networks:
       - flaskapp-network
- 
 
   gif-db:
     image: mysql:5.7
@@ -24,11 +23,15 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
 networks:
   flaskapp-network:
-    driver: bridge  # Define the network with a driver (bridge is common for local setups)
+    driver: bridge
 
 volumes:
-  mysql-data:  # Ensure the volume is also defined if you plan to persist MySQL data
+  mysql-data:
