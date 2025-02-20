@@ -1,5 +1,9 @@
 name: Terraform GKE Cluster Setup and Deploy via helm
 
+env:
+  IMAGE_NAME: yuvalbenar/terraflaskqlk8s
+  IMAGE_TAG: ${{ github.run_number }}
+
 on:
   push:
     branches:
@@ -21,7 +25,7 @@ jobs:
 
       - name: Set Build Environment Variables
         run: |
-          echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
           echo "Built IMAGE_TAG=${{ github.run_number }}"
 
@@ -50,7 +54,7 @@ jobs:
 
       - name: Set Test Environment Variables
         run: |
-          # Re-set IMAGE_TAG here to ensure consistency across jobs.
+          # Re-set IMAGE_TAG here to ensure consistency in this job.
           echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
           echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
@@ -60,7 +64,7 @@ jobs:
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
           echo "Retaining IMAGE_TAG=${{ github.run_number }}"
 
       - name: Debug Environment Variables
@@ -92,6 +96,7 @@ jobs:
           docker compose logs
           echo "Testing on port: ${PORT}"
           curl -f http://localhost:${PORT}
+          echo "Tests passed..."
 
   helm:
     runs-on: ubuntu-latest
