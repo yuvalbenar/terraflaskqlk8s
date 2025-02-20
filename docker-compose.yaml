@@ -24,8 +24,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    env_file:
-      - .env
+    
 
 networks:
   flaskapp-network:
