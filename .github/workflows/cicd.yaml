@@ -58,7 +58,6 @@ jobs:
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Debug Environment Variables
         run: |
