@@ -24,7 +24,7 @@ jobs:
           echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
           echo "Built IMAGE_TAG=${{ github.run_number }}"
-      
+
       - name: Build Docker Image
         run: |
           docker build --no-cache --pull -t $IMAGE_NAME:$IMAGE_TAG .
@@ -50,6 +50,8 @@ jobs:
 
       - name: Set Test Environment Variables
         run: |
+          # Re-set IMAGE_TAG here to ensure consistency across jobs.
+          echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
           echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
           echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> $GITHUB_ENV
@@ -58,9 +60,8 @@ jobs:
           echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
-          # IMAGE_NAME and IMAGE_TAG were already set in the build job and persist via $GITHUB_ENV
-          echo "Retaining IMAGE_NAME=${IMAGE_NAME}"
-          echo "Retaining IMAGE_TAG=${IMAGE_TAG}"
+          echo "IMAGE_NAME=yuvalbenar/terraflaskqlk8s" >> $GITHUB_ENV
+          echo "Retaining IMAGE_TAG=${{ github.run_number }}"
 
       - name: Debug Environment Variables
         run: |
