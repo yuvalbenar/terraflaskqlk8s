@@ -12,3 +12,4 @@ terraform.tfstate
 terraform.tfstate.backup
 gcp_credentials.json
 configmap.yaml
+.env
