@@ -53,7 +53,6 @@ jobs:
 
       - name: Set Test Environment Variables
         run: |
-          # Re-set IMAGE_TAG to "latest" to ensure consistency in this job.
           echo "IMAGE_TAG=latest" >> $GITHUB_ENV
           echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
           echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
@@ -75,7 +74,6 @@ jobs:
       - name: Build Docker Compose Image
         run: |
           docker compose build --no-cache
-          # Use the same IMAGE_TAG to tag the image built by docker compose
           docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:latest
 
       - name: Push Docker Image (Test Stage)
@@ -366,3 +364,18 @@ jobs:
         run: |
           helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring --create-namespace -f prometheus_values.yaml
+
+  cleanup-docker-tags:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run Docker Hub Cleanup
+        run: |
+          chmod +x ./docker-clean.sh
+          ./docker-clean.sh
