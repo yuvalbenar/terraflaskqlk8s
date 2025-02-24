@@ -103,7 +103,8 @@ jobs:
 
       - name: Install Prometheus Operator CRDs
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
+          kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml --validate=false
+
 
       - name: Set New Version and Update version.txt
         run: |
