@@ -1,4 +1,6 @@
 prometheus:
+  service:
+    type: LoadBalancer
   serviceMonitorSelectorNilUsesHelmValues: false
   prometheusSpec:
     storageSpec:
@@ -10,6 +12,7 @@ prometheus:
             requests:
               storage: 20Gi
           storageClassName: standard
+
 grafana:
   persistence:
     enabled: true
@@ -17,3 +20,5 @@ grafana:
     accessModes:
       - ReadWriteOnce
     size: 10Gi
+  service:
+    type: LoadBalancer
