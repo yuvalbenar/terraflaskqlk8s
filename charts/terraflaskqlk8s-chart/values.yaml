@@ -112,23 +112,3 @@ configmap:
             ('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3EzNWVlOWFjaGtpYjdxaWc3c2RxOHZrNG44dHI4NXNmdHk0MDJ5aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yXBqba0Zx8S4/giphy-downsized.gif'),
             ('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5uZGR6MjZtdXAycmFhbHFqbHlzdmN2eTF0dnZtN2prZ3RpdjllcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l41Yzkvl2h3roxkuk/giphy.gif')
 
-# ========================
-# Monitoring Persistent Storage Settings
-# ========================
-# These settings apply to the monitoring stack (Grafana and Prometheus),
-# which are deployed in the "monitoring" namespace.
-prometheus:
-  persistentVolume:
-    enabled: true
-    storageClassName: "standard"    # Replace with your storage class if different
-    accessModes:
-      - ReadWriteOnce
-    size: 20Gi
-
-grafana:
-  persistence:
-    enabled: true
-    storageClassName: "standard"    # Replace with your storage class if needed
-    accessModes:
-      - ReadWriteOnce
-    size: 10Gi

@@ -1,2 +1,16 @@
 prometheus:
   serviceMonitorSelectorNilUsesHelmValues: false
+  persistentVolume:
+    enabled: true
+    storageClassName: "standard"    # or "standard-rwo" if you prefer
+    accessModes:
+      - ReadWriteOnce
+    size: 20Gi
+
+grafana:
+  persistence:
+    enabled: true
+    storageClassName: "standard"    # or "standard-rwo"
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
