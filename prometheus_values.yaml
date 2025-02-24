@@ -1,6 +1,5 @@
 prometheus:
   serviceMonitorSelectorNilUsesHelmValues: false
-prometheus:
   persistence:
     enabled: true
     storageClassName: "standard"    # or "standard-rwo" if you prefer
