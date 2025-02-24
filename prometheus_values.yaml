@@ -1,4 +1,6 @@
 prometheus:
+  prometheusOperator:
+    replicaCount: 1
   service:
     type: LoadBalancer
   serviceMonitorSelectorNilUsesHelmValues: false
