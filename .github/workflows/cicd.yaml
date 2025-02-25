@@ -1,4 +1,3 @@
-
 name: Terraform GKE Cluster Setup and Deploy via helm
 
 on:
@@ -29,13 +28,16 @@ jobs:
           echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
           echo "IMAGE_TAG=latest" >> $GITHUB_ENV
           echo "Built IMAGE_TAG=latest"
+
       - name: Build Docker Image
         run: |
           docker build --no-cache --pull -t $IMAGE_NAME:latest .
           docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest
+
       - name: Push Docker Image
         run: |
           docker push $IMAGE_NAME:latest
+
   build-Test:
     runs-on: ubuntu-latest
     needs: build
@@ -62,23 +64,28 @@ jobs:
           echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
           echo "Retaining IMAGE_TAG=latest"
+
       - name: Debug Environment Variables
         run: |
           echo "IMAGE_NAME=${IMAGE_NAME}"
           echo "IMAGE_TAG=${IMAGE_TAG}"
           echo "PORT=${PORT}"
+
       - name: Build Docker Compose Image
         run: |
           docker compose build --no-cache
           docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:latest
+
       - name: Push Docker Image (Test Stage)
         run: |
           docker push ${IMAGE_NAME}:latest
+
       - name: Test - Running Project
         run: |
           docker compose up -d
           sleep 5
           docker compose ps
+
       - name: Run Tests
         run: |
           sleep 3
@@ -86,6 +93,7 @@ jobs:
           echo "Testing on port: ${PORT}"
           curl -f http://localhost:${PORT}
           echo "Tests passed..."
+
   helm:
     runs-on: ubuntu-latest
     needs: build-Test
@@ -103,6 +111,7 @@ jobs:
           git add version.txt
           git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
+
       - name: Update Helm Chart Version with New Version
         run: |
           VERSION=$(cat version.txt)
@@ -113,16 +122,19 @@ jobs:
           echo "✅ Updated Chart.yaml:"
           cat Chart.yaml
           cd ../..
+
       - name: Package Helm Chart
         run: |
           cd charts
           helm package terraflaskqlk8s-chart --destination ..
           cd ..
           ls -lrta
+
       - name: Update Helm Repo Index
         run: |
           helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
           cat index.yaml
+
       - name: Push Helm Chart to Repository
         env:
           HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
@@ -144,6 +156,7 @@ jobs:
           git push origin main
           cd ..
           echo "✅ Helm chart successfully updated!"
+
   terraform:
     runs-on: ubuntu-latest
     needs: helm
@@ -200,24 +213,30 @@ jobs:
           echo "deb [signed-by=/etc/apt/trusted.gpg.d/google.asc] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
+
       - name: Install Helm
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
+
       - name: Add and Update Helm Repository
         run: |
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
+
       - name: Install GKE Auth Plugin
         run: |
           sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
       - name: List GKE Clusters
         run: |
           gcloud container clusters list --project terraflaskqlk8s
+
       - name: Set GKE Context to Connect to Cluster
         run: |
           gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
+
       - name: Create k8secret.yaml from GitHub Secrets
         run: |
           echo "Creating k8secret.yaml"
@@ -235,12 +254,14 @@ jobs:
           EOF
           echo "Applying k8secret.yaml to the cluster"
           kubectl apply -f k8secret.yaml -n default
+
       - name: Read Version from Remote version.txt
         id: get_version
         run: |
           VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Using version: $VERSION"
+
       - name: Wait for Helm Chart Update
         run: |
           for i in {1..10}; do
@@ -251,6 +272,7 @@ jobs:
             sleep 30
           done
           exit 1
+
       - name: Patch Existing ConfigMaps for Helm Adoption
         run: |
           kubectl patch configmap flask-config -n default --type merge -p '{
@@ -265,6 +287,7 @@ jobs:
               "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
             }
           }' || echo "ConfigMap 'mysql-config' not found, skipping patch."
+
       - name: Patch Existing Service 'gif-db' for Helm Adoption
         run: |
           kubectl patch service gif-db -n default --type merge -p '{
@@ -273,18 +296,22 @@ jobs:
               "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
             }
           }' || echo "Service 'gif-db' not found, skipping patch."
+
       - name: Deploy Flask App Using Helm, Updating Release
         run: |
           echo "🚀 Deploying Helm Chart to GKE"
           helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
             --namespace default \
             --set image.tag=$VERSION --version $VERSION
+
       - name: Verify Kubernetes Services
         run: |
           kubectl get services
+
       - name: Check Flask App Pods
         run: |
           kubectl get pods
+
   verify-monitoring:
     runs-on: ubuntu-latest
     needs: deploy
@@ -307,30 +334,70 @@ jobs:
           echo "deb [signed-by=/etc/apt/trusted.gpg.d/google.asc] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
+
       - name: Install Helm
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
+
       - name: Add and Update Helm Repository
         run: |
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
           helm repo update
           helm search repo helmcharts --versions
+
       - name: Install GKE Auth Plugin
         run: |
-          sudo apt-get update && sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
       - name: Set GKE Context to Connect to Cluster
         run: |
           gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
+
       - name: Install Helm and Add Prometheus Repo
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
           helm repo update
+
       - name: Verify Monitoring Is Up & Running
         run: |
           helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \
             --namespace monitoring --create-namespace -f prometheus_values.yaml
+
+      - name: Verify Logging Stack Is Up & Running
+        run: |
+          set -x
+          echo "Checking if a conflicting Loki stack release exists..."
+          existing_loki_release=$(helm list -A -o json | jq -r '.[] | select(.chart | startswith("loki-stack")) | .name')
+          if [[ -n "$existing_loki_release" && "$existing_loki_release" != "loki" ]]; then
+            echo "Loki stack already running under release $existing_loki_release. Please rename manually to be managed by this workflow."
+          elif [[ -n "$existing_loki_release" && "$existing_loki_release" == "loki" ]]; then
+            echo "Found existing Loki release 'loki'. Upgrading..."
+            helm repo add grafana https://grafana.github.io/helm-charts
+            cd charts/log/
+            helm upgrade loki grafana/loki-stack -n log -f loki-values.yaml
+            helm list -n log
+            if helm status loki -n log | grep -iq "deployed"; then
+              echo "Loki upgrade successful."
+            else
+              echo "Loki upgrade may have failed. Exiting."
+              exit 1
+            fi
+          else
+            echo "No existing Loki release found. Installing under name 'loki'..."
+            cd charts/log/
+            helm repo add grafana https://grafana.github.io/helm-charts
+            helm install loki grafana/loki-stack -n log -f loki-values.yaml
+            kubectl get pods -n log
+            if helm status loki -n log | grep -iq "deployed"; then
+              echo "Loki install successful."
+            else
+              echo "Loki install may have failed. Exiting."
+              exit 1
+            fi
+          fi
+
   cleanup-docker-tags:
     runs-on: ubuntu-latest
     needs: verify-monitoring  # This makes it the final job in the workflow.
