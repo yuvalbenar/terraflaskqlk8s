@@ -373,30 +373,55 @@ jobs:
           if [[ -n "$existing_loki_release" && "$existing_loki_release" != "loki" ]]; then
             echo "Loki stack already running under release $existing_loki_release. Please rename manually to be managed by this workflow."
           elif [[ -n "$existing_loki_release" && "$existing_loki_release" == "loki" ]]; then
-            echo "Found existing Loki release 'loki'. Upgrading..."
-            helm repo add grafana https://grafana.github.io/helm-charts
-            cd charts/log/
-            helm upgrade loki grafana/loki-stack -n log -f loki-values.yaml
-            helm list -n log
-            if helm status loki -n log | grep -iq "deployed"; then
-              echo "Loki upgrade successful."
+            echo "Found existing Loki release 'loki'. Checking status..."
+            existing_status=$(helm status loki -n monitoring --output json | jq -r '.info.status')
+            echo "Current status: $existing_status"
+            if [[ "$existing_status" != "deployed" ]]; then
+              echo "Release 'loki' is not deployed (status: $existing_status). Uninstalling..."
+              helm uninstall loki -n monitoring
+              echo "Installing Loki..."
+              helm repo add grafana https://grafana.github.io/helm-charts
+              helm repo update
+              cd charts/log/
+              helm install loki grafana/loki-stack -n monitoring -f loki-values.yaml
+              cd ../..
+              if helm status loki -n monitoring | grep -iq "deployed"; then
+                echo "Loki install successful."
+              else
+                echo "Loki install may have failed. Exiting."
+                exit 1
+              fi
             else
-              echo "Loki upgrade may have failed. Exiting."
-              exit 1
+              echo "Loki release 'loki' is deployed. Upgrading..."
+              helm repo add grafana https://grafana.github.io/helm-charts
+              helm repo update
+              cd charts/log/
+              helm upgrade loki grafana/loki-stack -n monitoring -f loki-values.yaml
+              cd ../..
+              if helm status loki -n monitoring | grep -iq "deployed"; then
+                echo "Loki upgrade successful."
+              else
+                echo "Loki upgrade may have failed. Exiting."
+                exit 1
+              fi
             fi
           else
             echo "No existing Loki release found. Installing under name 'loki'..."
-            cd charts/log/
             helm repo add grafana https://grafana.github.io/helm-charts
-            helm install loki grafana/loki-stack -n log -f loki-values.yaml
-            kubectl get pods -n log
-            if helm status loki -n log | grep -iq "deployed"; then
+            helm repo update
+            cd charts/log/
+            helm install loki grafana/loki-stack -n monitoring -f loki-values.yaml
+            cd ../..
+            if helm status loki -n monitoring | grep -iq "deployed"; then
               echo "Loki install successful."
             else
               echo "Loki install may have failed. Exiting."
               exit 1
             fi
           fi
+      - name: Verify Logging Stack Status
+        run: |
+          helm status loki -n monitoring
 
   cleanup-docker-tags:
     runs-on: ubuntu-latest
@@ -408,7 +433,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
       - name: Run Docker Hub Cleanup
         run: |
           chmod +x ./docker-clean.sh
