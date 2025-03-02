@@ -1,3 +1,11 @@
+-- this file is a script in the SQL languge. it is meant for the creation of a database. hence it's name - init (intialize) database of sql. 
+-- now that we know what this file is we may ask for its purpuse within this program: to serve as the backend of a flask webapp. 
+-- this script in particuler will first create the database (often referd to as db) then create a table named visitor_counter
+-- said table will be used to recored a number of visitors on your flask webapp's dns. 
+-- it will then create an images table consisting of (in each line of the table) GIF links - these will be the content of the flask web app. 
+
+
+
 -- Create the database if it doesn't exist and switch to it
 CREATE DATABASE IF NOT EXISTS flaskdb;
 USE flaskdb;

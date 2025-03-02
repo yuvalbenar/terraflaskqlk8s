@@ -1,11 +1,16 @@
-import os
-import mysql.connector
-import random
-import time
-from flask import Flask, render_template, Response
-from dotenv import load_dotenv
-from mysql.connector import Error
-from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
+# this file is a flask app file. flask is a webframework for building web apps in the python languge.
+# this specific flask app is built for the purpuse of a website which will present a theme (described via html)
+# then showcase content imported from a database. in our case - random gifs of the mighty beagle. 
+# the app will first import the libraris requierd to run the app with all its current feauters in mind.
+
+import os # calls for pythons built in os module which creats a way to comnunicate with the systems os for file paths etc
+import mysql.connector # a library for comunication with a mysql database.
+import random # Imports Python's built-in module for generating pseudo-random numbers and performing random selections.
+import time # Imports the time module, providing functions to work with time (e.g., delays, timestamps).
+from flask import Flask, render_template, Response  # due to python's explicit import philosophy nothing is imported by default. not even python native apps. the imported flask components are as follows: flask- The main class for creating a web application. render_template- Renders HTML templates, response- Constructs HTTP response objects. 
+from dotenv import load_dotenv # Imports the function to load environment variables from a .env file
+from mysql.connector import Error #Imports the Error class from the MySQL Connector, used for handling database connection and query errors.
+from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST # Imports components for monitoring - gauge being a metric type for values that go up and down,content type defiens the http data type to be scraped to assure the http data is readable for the monitoring componnents.
 
 # Load environment variables from .env file or GitHub secrets
 load_dotenv()
