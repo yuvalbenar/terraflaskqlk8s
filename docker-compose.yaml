@@ -2,29 +2,29 @@
 # docker-compose is a file whose purpse is to run docker images and enable multi container applications to run in a specfic envioremnt (depndencis, networks, volumes) within one file and with minimal effort 
 # minimal effort in this context being commends for excution - as commented out beleow.
 version: '3' # the release version of docker-compose used. this will set the syntex and feauters.
-services: # A service is an abstract definition of a computing resource within an application which can be scaled or replaced independently from other components.
-  flaskgif:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: yuvalbenar/terraflaskqlk8s:latest
-    container_name: flaskgif
+services: # A service is essentialy a blueprint for how to utileze a specfic componenet of an app. it is applied via a container - which it defiens.
+  flaskgif: #name of the service
+    build: #a docker-compose section for how to build the image the container will be built from. 
+      context: . #context here means the dir whose content docker will get. in this case its . meaning the whole current location.
+      dockerfile: Dockerfile #the docker file to be used for the building of the container.
+    image: yuvalbenar/terraflaskqlk8s:latest #the name of the image which will be tested followd by its tag.
+    container_name: flaskgif 
     ports:
       - "5000:5000"
-    depends_on:
+    depends_on: #used to force the system to first run whatever it is that depends on specefies. 
       - gif-db
-    networks:
+    networks: #the network created to allow comnunication between containers inside it. docker has a deafult network, but i chose to make a custom one to ensure comnuication.
       - flaskapp-network
 
   gif-db:
-    image: mysql:5.7
+    image: mysql:5.7 #this image here, unlike in the service above it is not built from a source code dockerfile but rather pulled from a docker hub offical mysql releaseץ
     container_name: gif-db
     ports:
       - "3308:3306"
     networks:
       - flaskapp-network
-    volumes:
-      - mysql-data:/var/lib/mysql
+    volumes: #htis is a pv - presistent volume. it stores data consistently (volumes here remain even after container removal)
+      - mysql-data:/var/lib/mysql  #the paths onto which the volumes are mounted. 
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
