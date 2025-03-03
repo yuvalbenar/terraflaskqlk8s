@@ -112,6 +112,14 @@ jobs:
           git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
 
+      - name: Re-tag Docker Image with New Version
+        run: |
+          NEW_VERSION=$(cat version.txt)
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker pull $IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:$NEW_VERSION
+          docker push $IMAGE_NAME:$NEW_VERSION
+
       - name: Update Helm Chart Version with New Version
         run: |
           VERSION=$(cat version.txt)

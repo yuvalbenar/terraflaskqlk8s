@@ -1,5 +1,8 @@
-version: '3'
-services:
+# this file is a docker-compose file written in 'yaml' - yaml is a format that acts like a set of instructions - a declrative languge that anounces components and then the resualts it seeks.
+# docker-compose is a file whose purpse is to run docker images and enable multi container applications to run in a specfic envioremnt (depndencis, networks, volumes) within one file and with minimal effort 
+# minimal effort in this context being commends for excution - as commented out beleow.
+version: '3' # the release version of docker-compose used. this will set the syntex and feauters.
+services: # A service is an abstract definition of a computing resource within an application which can be scaled or replaced independently from other components.
   flaskgif:
     build:
       context: .
