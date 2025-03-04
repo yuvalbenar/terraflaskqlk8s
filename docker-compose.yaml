@@ -1,13 +1,16 @@
+#consider changeing from docker-compose build to docker-compose up.
+
 # this file is a docker-compose file written in 'yaml' - yaml is a format that acts like a set of instructions - a declrative languge that anounces components and then the resualts it seeks.
 # docker-compose is a file whose purpse is to run docker images and enable multi container applications to run in a specfic envioremnt (depndencis, networks, volumes) within one file and with minimal effort 
 # minimal effort in this context being commends for excution - as commented out beleow.
+
 version: '3' # the release version of docker-compose used. this will set the syntex and feauters.
 services: # A service is essentialy a blueprint for how to utileze a specfic componenet of an app. it is applied via a container - which it defiens.
   flaskgif: #name of the service
     build: #a docker-compose section for how to build the image the container will be built from. 
       context: . #context here means the dir whose content docker will get. in this case its . meaning the whole current location.
       dockerfile: Dockerfile #the docker file to be used for the building of the container.
-    image: yuvalbenar/terraflaskqlk8s:latest #the name of the image which will be tested followd by its tag.
+    image: yuvalbenar/terraflaskqlk8s:latest #change from latst to version.txt number?
     container_name: flaskgif 
     ports:
       - "5000:5000"

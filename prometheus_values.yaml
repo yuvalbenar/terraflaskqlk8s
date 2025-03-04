@@ -13,7 +13,8 @@ prometheus:
           resources:
             requests:
               storage: 20Gi
-          storageClassName: standard
+          storageClassName: standard-wffc
+
 
 grafana:
   persistence:

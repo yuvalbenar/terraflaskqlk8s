@@ -434,7 +434,7 @@ jobs:
       - name: Verify Logging Stack Status
         run: |
           helm status loki -n monitoring
-
+# consider changing cleanup to trigger based on storage left in dockerhub, or to clean on a bigger time scale. 
   cleanup-docker-tags:
     runs-on: ubuntu-latest
     needs: verify-monitoring  # This makes it the final job in the workflow.
