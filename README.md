@@ -12,7 +12,7 @@ Configuration
 Overview
 TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization, infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE.
 
-![Project Diagram](images/terraflaskqlk8s2.drawio.svg)
+https://file+.vscode-resource.vscode-cdn.net/c%3A/Users/yuval/Downloads/terraflaskqlk8s2.drawio.svg?version%3D1741296008484
 
 
 
