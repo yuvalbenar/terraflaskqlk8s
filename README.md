@@ -1,47 +1,99 @@
 TerraFlaskQLK8s 🐶 – Your Daily Beagle Treat!
-TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask application. It leverages GitHub Actions for CI/CD, Docker for containerization, Terraform and Helm for provisioning and deployment on Google Kubernetes Engine (GKE), and Prometheus/Grafana for monitoring.
+TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask application. It leverages GitHub Actions for continuous integration and deployment, Docker for containerization, Terraform and Helm for provisioning and deployment on Google Kubernetes Engine (GKE), and Prometheus/Grafana for monitoring.
+
+Table of Contents
+Overview
+Architecture Diagram
+Key Features
+Quick Start
+CI/CD Workflow Overview
+Prerequisites
+Configuration
+Overview
+TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization, infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE.
+
+![Project Diagram](images/terraflaskqlk8s2.drawio.svg)
+
+
+
+This diagram outlines the key components of the system and their interactions.
 
 Key Features
-CI/CD Pipeline: Automated build, test, and deployment via GitHub Actions.
-Containerization: Dockerized app ensuring consistency across environments.
-Infrastructure as Code: Terraform provisions the GKE cluster while Helm manages Kubernetes deployments.
-Monitoring & Security: Prometheus and Grafana monitor performance and trigger alerts. dockerignore and gitignore keep info safe.
+CI/CD Pipeline:
+Automated builds, tests, and deployments via GitHub Actions.
+
+Containerization:
+Dockerized application ensures consistency across environments.
+
+Infrastructure as Code:
+Terraform provisions the GKE cluster while Helm manages Kubernetes deployments.
+
+Monitoring & Alerting:
+Prometheus and Grafana monitor application performance and trigger alerts as needed.
+
+Security & Best Practices:
+Use of .dockerignore and .gitignore to protect sensitive information.
+
 Quick Start
-Clone the Repository:
+Clone the Repository
 bash
 Copy
 git clone https://github.com/YourUsername/terraflaskqlk8s.git
 cd terraflaskqlk8s
-Install Dependencies:
+Install Dependencies
 bash
 Copy
 pip install -r requirements.txt
-Run Locally:
+Run the Application Locally
+Start the Flask server by running:
+
 bash
 Copy
 flask run
-Access the app at http://127.0.0.1:5000
-Test with Docker Compose:
+The Flask server will start on the default port (5000). Adjust the command or configuration if you use a different port.
+
+Test with Docker Compose
+To test the multi-container setup locally:
+
 bash
 Copy
 docker compose up --build
 curl http://localhost:5000
 CI/CD Workflow Overview
 Build Stage:
-A Docker image is built from the source code and pushed to Docker Hub.
+
+The source code is checked out and a Docker image is built (without cache) and tagged as latest.
+The image is then pushed to Docker Hub.
 Test Stage:
-Docker Compose creates a multi-container setup to run integration tests.
+
+Docker Compose spins up a multi-container environment.
+Integration tests (e.g., curl tests) verify that the application is functioning as expected.
 Helm Stage:
-The Helm chart is updated (using a version from CI), packaged, and pushed.
+
+A new version is computed (e.g., 0.0.${{ github.run_number }}) and stored in version.txt.
+The Docker image is re-tagged with the new version and pushed.
+The Helm chart is updated to use the new version, packaged, and pushed to the Helm repository.
 Deployment Stage:
-Terraform provisions the GKE cluster and Helm deploys the updated application.
+
+Terraform provisions or updates the GKE cluster.
+Helm deploys the updated application to the cluster.
 Monitoring:
-Prometheus and Grafana ensure the app is performing as expected.
+
+Prometheus scrapes application metrics.
+Grafana displays dashboards and alerts for operational monitoring.
 Prerequisites
 Python 3.8+
 Docker & Docker Compose
-GitHub Actions enabled
+GitHub Actions enabled in your repository
 Terraform
 Helm
 Configuration
-Set up necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variable
+Before running the pipeline, ensure that you have configured the necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variables.
+
+For persistent monitoring, the Helm values configure Prometheus and Grafana as follows:
+
+Prometheus:
+Uses a persistent volume (20Gi, storage class standard-wffc) to retain historical metrics.
+Grafana:
+Uses a persistent volume (10Gi, storage class standard) to store dashboards and configuration.
+You can review and adjust these settings in your prometheus_values.yaml.
