@@ -40,7 +40,7 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push $IMAGE_NAME:latest
-# this job will use docker-compose. there is a certain repetition here as we once again build a docker image and push it - this is by choise. 
+# this job will use docker-compose. thessre is a certain repetition here as we once again build a docker image and push it - this is by choise. 
 # if the docker-compose image is of a faulty nature, we can compare it to the one built on the previous step. this works best if versiond difrrently, but still has value here for image digest compercement.
   build-Test:
     runs-on: ubuntu-latest
