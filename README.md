@@ -11,7 +11,7 @@ TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask a
 - [Overview](#overview)
 
 #### Architecture Diagram
-![alt text](images/terraflaskqlk8s2.drawio.svg)
+![alt text](images/hopefullyifinaldiagram.svg)
 
 
 
