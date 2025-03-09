@@ -1,16 +1,14 @@
-# TerraFlaskQLK8s 🐶 – Your Daily Beagle Treat!
-TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask application. It leverages GitHub Actions for continuous integration and deployment, Docker for containerization, Terraform and Helm for provisioning and deployment on Google Kubernetes Engine (GKE), and Prometheus/Grafana for monitoring.
+## TerraFlaskQLK8s 🐶 – Your Daily Beagle Treat!
+TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask application. It leverages GitHub Actions for continuous integration and deployment,Docker for containerization,Terraform and Helm for provisioning and deployment on Google Kubernetes Engine (GKE), and Prometheus/Grafana for monitoring.
 
 ## Table of Contents
-## Architecture Diagram
-## Key Features
-## Quick Start
-## CI/CD Workflow Overview
-## Prerequisites
-## Configuration
-## Overview
-## TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization,
-## infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE. 
+- [Architecture Diagram](#architecture-diagram)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [CI/CD Workflow Overview](#cicd-workflow-overview)
+- [Prerequisites](#prerequisites)
+- [Configuration](#configuration)
+- [Overview](#overview)
 
 #### Architecture Diagram
 ![alt text](images/terraflaskqlk8s2.drawio.svg)
@@ -98,3 +96,4 @@ Uses a persistent volume (20Gi, storage class standard-wffc) to retain historica
 Grafana:
 Uses a persistent volume (10Gi, storage class standard) to store dashboards and configuration.
 You can review and adjust these settings in your prometheus_values.yaml.
+ 
