@@ -75,15 +75,6 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}"
           echo "PORT=${PORT}"
 
-      - name: Build Docker Compose Image
-        run: |
-          docker compose build --no-cache
-          docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:latest
-
-      - name: Push Docker Image (Test Stage)
-        run: |
-          docker push ${IMAGE_NAME}:latest
-
       - name: Test - Running Project
         run: |
           docker compose up -d
@@ -142,26 +133,26 @@ jobs:
           cd ..
           ls -lrta
 
-      - name: Update Helm Repo Index
-        run: |
-          helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
-          cat index.yaml
-
       - name: Push Helm Chart to Repository
         env:
           HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
         run: |
+          # Generate a new index by merging with any existing index.yaml from your build output
+          helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
+          cat index.yaml
           echo "📥 Cloning helm-charts repository..."
           git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
           cd helmrepo
           git config --global user.name "github-actions-bot"
           git config --global user.email "github-actions@github.com"
-          echo "🗑 Removing old Helm packages and index..."
-          rm -f *.tgz && rm -f index.yaml
-          echo "📂 Copying new Helm chart and index.yaml..."
+          echo "🗑 Removing old index file..."
+          rm -f index.yaml
+          # Optionally delete very old chart packages (older than 21 days)
+          find . -name "*.tgz" -mtime +21 -delete
+          echo "📂 Copying new Helm chart packages and index file..."
           cp ../*.tgz .
           cp ../index.yaml .
-          echo "📝 Committing updated Helm chart..."
+          echo "📝 Committing updated Helm chart repository..."
           git add .
           git commit -m "Updated Helm chart to version $(cat ../version.txt)" || echo "No changes to commit"
           echo "🚀 Pushing to main branch..."
@@ -169,6 +160,7 @@ jobs:
           cd ..
           echo "✅ Helm chart successfully updated!"
 
+#maybe change it to have the charts removed every 3 weeks or months or so?
   terraform:
     runs-on: ubuntu-latest
     needs: helm
@@ -230,7 +222,7 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
           helm version
-
+#check about this, why update here
       - name: Add and Update Helm Repository
         run: |
           helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/

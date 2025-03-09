@@ -12,7 +12,7 @@ Configuration
 Overview
 TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization, infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE.
 
-https://file+.vscode-resource.vscode-cdn.net/c%3A/Users/yuval/Downloads/terraflaskqlk8s2.drawio.svg?version%3D1741296008484
+![](../Downloads/terraflaskqlk8s2.drawio.svg)
 
 
 
@@ -97,3 +97,5 @@ Uses a persistent volume (20Gi, storage class standard-wffc) to retain historica
 Grafana:
 Uses a persistent volume (10Gi, storage class standard) to store dashboards and configuration.
 You can review and adjust these settings in your prometheus_values.yaml.
+
+[def]: image.png
