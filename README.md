@@ -1,25 +1,25 @@
 # TerraFlaskQLK8s 🐶 – Your Daily Beagle Treat!
 TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask application. It leverages GitHub Actions for continuous integration and deployment, Docker for containerization, Terraform and Helm for provisioning and deployment on Google Kubernetes Engine (GKE), and Prometheus/Grafana for monitoring.
 
-### Table of Contents
-### Overview
-### Architecture Diagram
-### Key Features
-### Quick Start
-### CI/CD Workflow Overview
-### Prerequisites
-### Configuration
-### Overview
-### TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization,
-### infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE. 
+## Table of Contents
+## Architecture Diagram
+## Key Features
+## Quick Start
+## CI/CD Workflow Overview
+## Prerequisites
+## Configuration
+## Overview
+## TerraFlaskQLK8s automates the build, test, and deployment of a Flask application. The solution integrates containerization,
+## infrastructure-as-code, and monitoring to ensure a robust and scalable environment on GKE. 
 
+#### Architecture Diagram
 ![alt text](images/terraflaskqlk8s2.drawio.svg)
 
 
 
 This diagram outlines the key components of the system and their interactions.
 
-Key Features
+#### Key Features
 CI/CD Pipeline:
 Automated builds, tests, and deployments via GitHub Actions.
 
@@ -30,12 +30,12 @@ Infrastructure as Code:
 Terraform provisions the GKE cluster while Helm manages Kubernetes deployments.
 
 Monitoring & Alerting:
-Prometheus and Grafana monitor application performance and trigger alerts as needed.
+Prometheus and Grafana monitor application performance and trigger alerts as needed, loki used for logging.
 
 Security & Best Practices:
 Use of .dockerignore and .gitignore to protect sensitive information.
 
-Quick Start
+#### Quick Start
 Clone the Repository
 bash
 Copy
@@ -60,26 +60,27 @@ bash
 Copy
 docker compose up --build
 curl http://localhost:5000
-CI/CD Workflow Overview
-Build Stage:
 
-The source code is checked out and a Docker image is built (without cache) and tagged as latest.
+#### CI/CD Workflow Overview
+
+**Build Stage:**
+The source code is checked out and a Docker image is built and tagged as latest.
 The image is then pushed to Docker Hub.
-Test Stage:
 
+**Test Stage:**
 Docker Compose spins up a multi-container environment.
 Integration tests (e.g., curl tests) verify that the application is functioning as expected.
-Helm Stage:
 
+**Helm Stage:**
 A new version is computed (e.g., 0.0.${{ github.run_number }}) and stored in version.txt.
 The Docker image is re-tagged with the new version and pushed.
 The Helm chart is updated to use the new version, packaged, and pushed to the Helm repository.
-Deployment Stage:
 
+**Deployment Stage:**
 Terraform provisions or updates the GKE cluster.
 Helm deploys the updated application to the cluster.
-Monitoring:
 
+**Monitoring:**
 Prometheus scrapes application metrics.
 Grafana displays dashboards and alerts for operational monitoring.
 Prerequisites
@@ -91,12 +92,9 @@ Helm
 Configuration
 Before running the pipeline, ensure that you have configured the necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variables.
 
-For persistent monitoring, the Helm values configure Prometheus and Grafana as follows:
-
+__For persistent monitoring,__ the Helm values configure Prometheus and Grafana as follows:
 Prometheus:
 Uses a persistent volume (20Gi, storage class standard-wffc) to retain historical metrics.
 Grafana:
 Uses a persistent volume (10Gi, storage class standard) to store dashboards and configuration.
 You can review and adjust these settings in your prometheus_values.yaml.
-
-[def]: image.png
