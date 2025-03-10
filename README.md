@@ -83,18 +83,18 @@ Grafana displays dashboards and alerts for operational monitoring.
 
 
 #### Prerequisites
-Python 3.8+
-Docker & Docker Compose
-GitHub Actions enabled in your repository
-Terraform
-Helm
+Python 3.8+\
+Docker & Docker Compose\
+GitHub Actions enabled in your repository\
+Terraform\
+Helm\
 
 #### Configuration
 Before running the pipeline, ensure that you have configured the necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variables.
 
-__For persistent monitoring,__ the Helm values configure Prometheus and Grafana as follows:
+__For persistent monitoring,__ the Helm values configure Prometheus and Grafana as follows:\
 Prometheus:
-Uses a persistent volume (20Gi, storage class standard-wffc) to retain historical metrics.
+Uses a persistent volume (20Gi, storage class standard-wffc) to retain historical metrics.\
 Grafana:
 Uses a persistent volume (10Gi, storage class standard) to store dashboards and configuration.
 You can review and adjust these settings in your prometheus_values.yaml.
