@@ -87,7 +87,7 @@ Python 3.8+\
 Docker & Docker Compose\
 GitHub Actions enabled in your repository\
 Terraform\
-Helm\
+Helm
 
 #### Configuration
 Before running the pipeline, ensure that you have configured the necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variables.
