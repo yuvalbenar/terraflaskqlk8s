@@ -8,7 +8,6 @@ TerraFlaskQLK8s is an automated, containerized deployment solution for a Flask a
 - [CI/CD Workflow Overview](#cicd-workflow-overview)
 - [Prerequisites](#prerequisites)
 - [Configuration](#configuration)
-- [Overview](#overview)
 
 #### Architecture Diagram
 ![alt text](images/hopefullyifinaldiagram.svg)
@@ -81,13 +80,16 @@ Helm deploys the updated application to the cluster.
 **Monitoring:**
 Prometheus scrapes application metrics.
 Grafana displays dashboards and alerts for operational monitoring.
-Prerequisites
+
+
+#### Prerequisites
 Python 3.8+
 Docker & Docker Compose
 GitHub Actions enabled in your repository
 Terraform
 Helm
-Configuration
+
+#### Configuration
 Before running the pipeline, ensure that you have configured the necessary secrets (e.g., Docker Hub credentials, GCP credentials, MySQL passwords) and variables in your GitHub repository under Actions > Secrets & Variables.
 
 __For persistent monitoring,__ the Helm values configure Prometheus and Grafana as follows:
