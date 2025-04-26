@@ -1,0 +1,114 @@
+# Global settings (optional)
+global:
+  namespace: default
+
+# ========================
+# Flask Application Config
+# ========================
+flask:
+  name: flask
+  replicaCount: 1
+  image:
+    repository: yuvalbenar/terraflaskqlk8s
+    tag: "latest"
+    pullPolicy: Always
+  containerPort: 5000
+  service:
+    type: LoadBalancer   # <-- Ensure this is definedoj
+    port: 5000
+    portName: http
+  # Environment values (populated via the flask-config ConfigMap)
+  config:
+    databaseHost: "gif-db"      # The host for the MySQL service
+    flaskEnv: "development"     # e.g., development or production
+  probes:
+    readiness:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    liveness:
+      initialDelaySeconds: 10
+      periodSeconds: 15
+
+# ========================
+# MySQL (gif-db) Config
+# ========================
+mysql:
+  name: gif-db
+  replicaCount: 1
+  image:
+    repository: mysql
+    tag: "5.7"
+    pullPolicy: IfNotPresent
+  containerPort: 3306
+  # The MySQL credentials are supplied by the dynamically created secret (mysql-secrets)
+  volume:
+    initDB:
+      enabled: true
+      configMapName: mysql-config
+      mountPath: /docker-entrypoint-initdb.d/init-db.sql
+      subPath: init-db.sql
+
+# ========================
+# Autoscaling settings
+# ========================
+autoscaling:
+  enabled: false   # Set this to true if you want to enable autoscaling
+  minReplicas: 1   # Optional, only needed if autoscaling is enabled
+  maxReplicas: 5   # Optional, only needed if autoscaling is enabled
+  targetCPUUtilizationPercentage: 80 # Optional, only needed if autoscaling is enabled
+  targetMemoryUtilizationPercentage: 80 # Optional, only needed if autoscaling is enabled
+
+# ========================
+# Ingress settings
+# ========================
+ingress:
+  enabled: false  # Set this to true if you want to enable ingress
+  # If enabled, you can specify ingress rules here
+  # For example:
+  #   annotations: {}
+  #   hosts:
+  #     - host: your-app.example.com
+  #       paths:
+  #         - /
+
+# ========================
+# ConfigMap Data
+# ========================
+configmap:
+  # For Flask app environment variables
+  flaskConfig:
+    name: flask-config
+    data:
+      database_host: "gif-db"
+      flask_env: "development"
+  # For MySQL initialization SQL script
+  mysqlConfig:
+    name: mysql-config
+    data:
+      init-db.sql: |-
+        -- Create the database if it doesn't exist and switch to it
+        CREATE DATABASE IF NOT EXISTS flaskdb;
+        USE flaskdb;
+        
+        -- Create the visitor_counter table
+        CREATE TABLE IF NOT EXISTS visitor_counter (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            count INT NOT NULL DEFAULT 0
+        );
+        
+        -- Initialize the counter with a starting value of 0
+        INSERT INTO visitor_counter (count) VALUES (0);
+        
+        -- Create the images table
+        CREATE TABLE IF NOT EXISTS images (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            url VARCHAR(255) UNIQUE NOT NULL
+        );
+        
+        -- Insert GIF URLs (duplicates will be ignored)
+        INSERT IGNORE INTO images (url) 
+        VALUES 
+            ('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExOXpyZDlzODRsejNicHc4dDVvNXRscjdybDNldXc1eWhqejM3cjY4ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QvBoMEcQ7DQXK/giphy.gif'),
+            ('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3EzNWVlOWFjaGtpYjdxaWc3c2RxOHZrNG44dHI4NXNmdHk0MDJ5aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yXBqba0Zx8S4/giphy-downsized.gif'),
+            ('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5uZGR6MjZtdXAycmFhbHFqbHlzdmN2eTF0dnZtN2prZ3RpdjllcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l41Yzkvl2h3roxkuk/giphy.gif')
+

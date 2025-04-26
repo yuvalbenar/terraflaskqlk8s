@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mysql.name }}
+spec:
+  replicas: {{ .Values.mysql.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.name }}
+    spec:
+      containers:
+        - name: mysql
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mysql.containerPort }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: root_password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: database_name
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: password
+          {{- if .Values.mysql.volume.initDB.enabled }}
+          volumeMounts:
+            - name: init-db-volume
+              mountPath: {{ .Values.mysql.volume.initDB.mountPath }}
+              subPath: {{ .Values.mysql.volume.initDB.subPath }}
+          {{- end }}
+      {{- if .Values.mysql.volume.initDB.enabled }}
+      volumes:
+        - name: init-db-volume
+          configMap:
+            name: {{ .Values.mysql.volume.initDB.configMapName }}
+      {{- end }}

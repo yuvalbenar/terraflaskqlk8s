@@ -1,0 +1,27 @@
+prometheus:
+  prometheusOperator:
+    replicaCount: 1
+  service:
+    type: LoadBalancer
+  serviceMonitorSelectorNilUsesHelmValues: false
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+          storageClassName: standard-wffc
+
+
+grafana:
+  persistence:
+    enabled: true
+    storageClassName: "standard"
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+  service:
+    type: LoadBalancer

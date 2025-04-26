@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.flask.name }}
+  labels:
+    app: flask
+spec:
+  replicas: {{ .Values.flask.replicaCount }}
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      containers:
+        - name: flask
+          image: "{{ .Values.flask.image.repository }}:{{ .Values.flask.image.tag }}"
+          imagePullPolicy: {{ .Values.flask.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.flask.containerPort }}
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.configmap.flaskConfig.name }}
+                  key: database_host
+            - name: FLASK_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.configmap.flaskConfig.name }}
+                  key: flask_env
+            # The following values come from the secret created dynamically:
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: user
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: password
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: database_name
+          readinessProbe:
+            httpGet:
+              path: /healthz  # A new dedicated health check path
+              port: {{ .Values.flask.containerPort }}
+            initialDelaySeconds: {{ .Values.flask.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.flask.probes.readiness.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /healthz  # A new dedicated health check path
+              port: {{ .Values.flask.containerPort }}
+            initialDelaySeconds: {{ .Values.flask.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.flask.probes.liveness.periodSeconds }}

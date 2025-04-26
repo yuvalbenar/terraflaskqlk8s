@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.mysqlConfig.name }}
+data:
+  init-db.sql: |-
+    {{ index .Values.configmap.mysqlConfig.data "init-db.sql" | nindent 4 }}

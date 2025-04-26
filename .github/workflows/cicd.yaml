@@ -1,15 +1,169 @@
-name: Terraform GKE Cluster Setup
+# this is a CI/CD workflow. it runs on GitHub actions. its purpose is to maintain a loop of actions, each in charge of some aspect of the product. 
+# this CI/CD builds a docker image from a dockerfile, tests its validty using docker-compose, packges everything neccery for the app to run on a GKE k8s cluster using helm, provisons the gke cluster with terraform, installs latest helm chart on cluster and finaly varifys the monitoring compenents and logging componennets . 
+# the CI/CD pipeline is the living heart of this project. it demonstrates every single technolgy used in the project and displayes their co-opration. do not read this file unless already familier with all the technolgies and files in this project. if you are new to this please read the read.me throughly and follow its instructions. 
+name: Terraform GKE Cluster Setup and Deploy via helm
 
 on:
   push:
     branches:
-      - main
+      - k8sdeploy
   workflow_dispatch:
-
+# this section declars the git hub repo, status and branches on which this workflow will run.
+env:
+  IMAGE_NAME: yuvalbenar/terraflaskqlk8s
+  IMAGE_TAG: latest
+# this section declars for all jobs how to define IMAGE_NAME, IMAGE_TAG. they are now global env varibels.
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+# now after we logged into docker using secrets we will build and push a docker image to an online docker hub repository.
+      - name: Set Build Environment Variables
+        run: |
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          echo "Built IMAGE_TAG=latest"
+
+      - name: Build Docker Image
+        run: |
+          docker build --no-cache --pull -t $IMAGE_NAME:latest .
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push $IMAGE_NAME:latest
+# this job will use docker-compose. thessre is a certain repetition here as we once again build a docker image and push it - this is by choise. 
+# if the docker-compose image is of a faulty nature, we can compare it to the one built on the previous step. this works best if versiond difrrently, but still has value here for image digest compercement.
+  build-Test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set Test Environment Variables
+        run: |
+          echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+          echo "FLASK_ENV=${{ secrets.FLASK_ENV }}" >> $GITHUB_ENV
+          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
+          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> $GITHUB_ENV
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> $GITHUB_ENV
+          echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "Retaining IMAGE_TAG=latest"
+
+      - name: Debug Environment Variables
+        run: |
+          echo "IMAGE_NAME=${IMAGE_NAME}"
+          echo "IMAGE_TAG=${IMAGE_TAG}"
+          echo "PORT=${PORT}"
+
+      - name: Test - Running Project
+        run: |
+          docker compose up -d
+          sleep 5
+          docker compose ps
+
+      - name: Run Tests
+        run: |
+          sleep 3
+          docker compose logs
+          echo "Testing on port: ${PORT}"
+          curl -f http://localhost:${PORT}
+          echo "Tests passed..."
+#
+  helm:
+    runs-on: ubuntu-latest
+    needs: build-Test
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set New Version and Update version.txt
+        run: |
+          NEW_VERSION="0.0.${{ github.run_number }}"
+          echo "Setting new version to: $NEW_VERSION"
+          echo "$NEW_VERSION" > version.txt
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions@github.com"
+          git add version.txt
+          git commit -m "Update version.txt to $NEW_VERSION" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yuvalbenar/terraflaskqlk8s.git k8sdeploy
+
+      - name: Re-tag Docker Image with New Version
+        run: |
+          NEW_VERSION=$(cat version.txt)
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker pull $IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:$NEW_VERSION
+          docker push $IMAGE_NAME:$NEW_VERSION
+
+      - name: Update Helm Chart Version with New Version
+        run: |
+          VERSION=$(cat version.txt)
+          echo "🔹 Setting Helm chart version to: $VERSION"
+          cd charts/terraflaskqlk8s-chart
+          sed -i "s/^version:.*/version: $VERSION/g" Chart.yaml
+          echo "# Auto-updated by CI workflow" >> Chart.yaml
+          echo "✅ Updated Chart.yaml:"
+          cat Chart.yaml
+          cd ../..
+
+      - name: Package Helm Chart
+        run: |
+          cd charts
+          helm package terraflaskqlk8s-chart --destination ..
+          cd ..
+          ls -lrta
+
+      - name: Push Helm Chart to Repository
+        env:
+          HELM_REPO_PAT: ${{ secrets.HELM_REPO_PAT }}
+        run: |
+          # Generate a new index by merging with any existing index.yaml from your build output
+          helm repo index --url https://yuvalbenar.github.io/helm-charts/ --merge index.yaml .
+          cat index.yaml
+          echo "📥 Cloning helm-charts repository..."
+          git clone https://${HELM_REPO_PAT}@github.com/yuvalbenar/helm-charts.git helmrepo
+          cd helmrepo
+          git config --global user.name "github-actions-bot"
+          git config --global user.email "github-actions@github.com"
+          echo "🗑 Removing old index file..."
+          rm -f index.yaml
+          # Optionally delete very old chart packages (older than 21 days)
+          find . -name "*.tgz" -mtime +21 -delete
+          echo "📂 Copying new Helm chart packages and index file..."
+          cp ../*.tgz .
+          cp ../index.yaml .
+          echo "📝 Committing updated Helm chart repository..."
+          git add .
+          git commit -m "Updated Helm chart to version $(cat ../version.txt)" || echo "No changes to commit"
+          echo "🚀 Pushing to main branch..."
+          git push origin main
+          cd ..
+          echo "✅ Helm chart successfully updated!"
+
+#maybe change it to have the charts removed every 3 weeks or months or so?
   terraform:
     runs-on: ubuntu-latest
-
+    needs: helm
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -34,9 +188,256 @@ jobs:
       - name: Terraform Init
         run: terraform init
         env:
-          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
         env:
-          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"  # Passing the credentials path
+          TF_VAR_credentials_path: "/tmp/gcp_credentials.json"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Google Cloud Authentication
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          create_credentials_file: true
+          export_environment_variables: true
+          universe: googleapis.com
+          cleanup_credentials: true
+
+      - name: Install Google Cloud SDK
+        run: |
+          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /etc/apt/trusted.gpg.d/google.asc
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/google.asc] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get update
+          sudo apt-get install google-cloud-sdk
+
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
+#check about this, why update here
+      - name: Add and Update Helm Repository
+        run: |
+          helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
+          helm repo update
+          helm search repo helmcharts --versions
+
+      - name: Install GKE Auth Plugin
+        run: |
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
+      - name: List GKE Clusters
+        run: |
+          gcloud container clusters list --project terraflaskqlk8s
+
+      - name: Set GKE Context to Connect to Cluster
+        run: |
+          gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
+
+      - name: Create k8secret.yaml from GitHub Secrets
+        run: |
+          echo "Creating k8secret.yaml"
+          cat <<EOF > k8secret.yaml
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: mysql-secrets
+          type: Opaque
+          data:
+            root_password: $(echo -n '${{ secrets.MYSQL_ROOT_PASSWORD }}' | base64)
+            database_name: $(echo -n '${{ secrets.DATABASE_NAME }}' | base64)
+            user: $(echo -n '${{ secrets.MYSQL_USER }}' | base64)
+            password: $(echo -n '${{ secrets.MYSQL_PASSWORD }}' | base64)
+          EOF
+          echo "Applying k8secret.yaml to the cluster"
+          kubectl apply -f k8secret.yaml -n default
+
+      - name: Read Version from Remote version.txt
+        id: get_version
+        run: |
+          VERSION=$(curl -s https://raw.githubusercontent.com/yuvalbenar/terraflaskqlk8s/k8sdeploy/version.txt)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using version: $VERSION"
+
+      - name: Wait for Helm Chart Update
+        run: |
+          for i in {1..10}; do
+            curl -s https://yuvalbenar.github.io/helm-charts/index.yaml | tee helm-index.yaml
+            if grep "$VERSION" helm-index.yaml; then
+              exit 0
+            fi
+            sleep 30
+          done
+          exit 1
+
+      - name: Patch Existing ConfigMaps for Helm Adoption
+        run: |
+          kubectl patch configmap flask-config -n default --type merge -p '{
+            "metadata": {
+              "labels": {"app.kubernetes.io/managed-by": "Helm"},
+              "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
+            }
+          }' || echo "ConfigMap 'flask-config' not found, skipping patch."
+          kubectl patch configmap mysql-config -n default --type merge -p '{
+            "metadata": {
+              "labels": {"app.kubernetes.io/managed-by": "Helm"},
+              "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
+            }
+          }' || echo "ConfigMap 'mysql-config' not found, skipping patch."
+
+      - name: Patch Existing Service 'gif-db' for Helm Adoption
+        run: |
+          kubectl patch service gif-db -n default --type merge -p '{
+            "metadata": {
+              "labels": {"app.kubernetes.io/managed-by": "Helm"},
+              "annotations": {"meta.helm.sh/release-name": "flasksql-chart", "meta.helm.sh/release-namespace": "default"}
+            }
+          }' || echo "Service 'gif-db' not found, skipping patch."
+
+      - name: Deploy Flask App Using Helm, Updating Release
+        run: |
+          echo "🚀 Deploying Helm Chart to GKE"
+          helm upgrade --install flasksql-chart helmcharts/flasksql-chart \
+            --namespace default \
+            --set flask.image.tag=$VERSION --version $VERSION 
+
+      - name: Verify Kubernetes Services
+        run: |
+          kubectl get services
+
+      - name: Check Flask App Pods
+        run: |
+          kubectl get pods
+
+  verify-monitoring:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Google Cloud Authentication
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          create_credentials_file: true
+          export_environment_variables: true
+          universe: googleapis.com
+          cleanup_credentials: true
+
+      - name: Install Google Cloud SDK
+        run: |
+          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /etc/apt/trusted.gpg.d/google.asc
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/google.asc] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          sudo apt-get update
+          sudo apt-get install google-cloud-sdk
+
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm version
+
+      - name: Add and Update Helm Repository
+        run: |
+          helm repo add helmcharts https://yuvalbenar.github.io/helm-charts/
+          helm repo update
+          helm search repo helmcharts --versions
+
+      - name: Install GKE Auth Plugin
+        run: |
+          sudo apt-get update && sudo apt-get install -y google-cloud-cli-gke-gcloud-auth-plugin
+
+      - name: Set GKE Context to Connect to Cluster
+        run: |
+          gcloud container clusters get-credentials flasksql-cluster --project terraflaskqlk8s --zone us-east1-b
+
+      - name: Install Helm and Add Prometheus Repo
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts/
+          helm repo update
+
+      - name: Verify Monitoring Is Up & Running
+        run: |
+          helm upgrade --install my-monitoring prometheus-community/kube-prometheus-stack \
+            --namespace monitoring --create-namespace -f prometheus_values.yaml
+
+      - name: Verify Logging Stack Is Up & Running
+        run: |
+          set -x
+          echo "Checking if a conflicting Loki stack release exists..."
+          existing_loki_release=$(helm list -A -o json | jq -r '.[] | select(.chart | startswith("loki-stack")) | .name')
+          if [[ -n "$existing_loki_release" && "$existing_loki_release" != "loki" ]]; then
+            echo "Loki stack already running under release $existing_loki_release. Please rename manually to be managed by this workflow."
+          elif [[ -n "$existing_loki_release" && "$existing_loki_release" == "loki" ]]; then
+            echo "Found existing Loki release 'loki'. Checking status..."
+            existing_status=$(helm status loki -n monitoring --output json | jq -r '.info.status')
+            echo "Current status: $existing_status"
+            if [[ "$existing_status" != "deployed" ]]; then
+              echo "Release 'loki' is not deployed (status: $existing_status). Uninstalling..."
+              helm uninstall loki -n monitoring
+              echo "Installing Loki..."
+              helm repo add grafana https://grafana.github.io/helm-charts
+              helm repo update
+              cd charts/log/
+              helm install loki grafana/loki-stack -n monitoring -f loki-values.yaml
+              cd ../..
+              if helm status loki -n monitoring | grep -iq "deployed"; then
+                echo "Loki install successful."
+              else
+                echo "Loki install may have failed. Exiting."
+                exit 1
+              fi
+            else
+              echo "Loki release 'loki' is deployed. Upgrading..."
+              helm repo add grafana https://grafana.github.io/helm-charts
+              helm repo update
+              cd charts/log/
+              helm upgrade loki grafana/loki-stack -n monitoring -f loki-values.yaml
+              cd ../..
+              if helm status loki -n monitoring | grep -iq "deployed"; then
+                echo "Loki upgrade successful."
+              else
+                echo "Loki upgrade may have failed. Exiting."
+                exit 1
+              fi
+            fi
+          else
+            echo "No existing Loki release found. Installing under name 'loki'..."
+            helm repo add grafana https://grafana.github.io/helm-charts
+            helm repo update
+            cd charts/log/
+            helm install loki grafana/loki-stack -n monitoring -f loki-values.yaml
+            cd ../..
+            if helm status loki -n monitoring | grep -iq "deployed"; then
+              echo "Loki install successful."
+            else
+              echo "Loki install may have failed. Exiting."
+              exit 1
+            fi
+          fi
+      - name: Verify Logging Stack Status
+        run: |
+          helm status loki -n monitoring
+# consider changing cleanup to trigger based don storage left in dockerhub, or to clean on a bigger time scale. 
+  cleanup-docker-tags:
+    runs-on: ubuntu-latest
+    needs: verify-monitoring  # This makes it the final job in the workflow.
+    env:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Run Docker Hub Cleanup
+        run: |
+          chmod +x ./docker-clean.sh
+          ./docker-clean.sh

@@ -1,3 +1,6 @@
+# this file is a docker file - a set of instructions on how to build a docker image. this docker file creats an image for a flask app.
+# this image is then uploaded in a process called CI/CD to an online repository for storeing docker images for the sake of keeping true to gitops princpels.
+# said repo will be the source of truth for docker in this program.
 # Use a Python 3.8 image
 FROM python:3.8-slim
 
